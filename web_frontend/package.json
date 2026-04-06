@@ -1,6 +1,33 @@
 {
+  "name": "pictogram-website",
+  "version": "1.0.0",
+  "description": "PictoGram - Modern social media platform website",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "build": "echo 'No build step needed for static site'",
+    "deploy": "echo 'Deploy files to pictogram.online'",
+    "dev": "npx serve . -l 3000"
+  },
+  "keywords": [
+    "social-media",
+    "photography",
+    "messaging",
+    "pictogram",
+    "website"
+  ],
+  "author": "Dhiraj Kumar",
+  "license": "MIT",
+  "homepage": "https://pictogram.online",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dhiraj8797/Pictogram"
+  },
   "dependencies": {
     "firebase": "^12.11.0",
     "react-router-dom": "^7.14.0"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
   }
 }

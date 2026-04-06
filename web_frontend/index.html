@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PictoGram - Share Your Moments</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+</head>
+<body class="bg-gray-900 text-white">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-gray-900/95 backdrop-blur-lg z-50 border-b border-purple-500/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                            PictoGram
+                        </h1>
+                    </div>
+                </div>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#home" class="nav-link text-white hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</a>
+                        <a href="#features" class="nav-link text-gray-300 hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Features</a>
+                        <a href="#explore" class="nav-link text-gray-300 hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Explore</a>
+                        <a href="#messages" class="nav-link text-gray-300 hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Messages</a>
+                        <a href="#profile" class="nav-link text-gray-300 hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
+                    </div>
+                </div>
+                
+                <!-- Auth Buttons -->
+                <div class="hidden md:block">
+                    <button onclick="showLoginModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors mr-2">
+                        Login
+                    </button>
+                    <button onclick="showSignupModal()" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        Sign Up
+                    </button>
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-gray-400 hover:text-white p-2">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Navigation -->
+        <div id="mobileMenu" class="hidden md:hidden bg-gray-800/95 backdrop-blur-lg">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#home" class="text-white hover:text-purple-400 block px-3 py-2 rounded-md text-base font-medium">Home</a>
+                <a href="#features" class="text-gray-300 hover:text-purple-400 block px-3 py-2 rounded-md text-base font-medium">Features</a>
+                <a href="#explore" class="text-gray-300 hover:text-purple-400 block px-3 py-2 rounded-md text-base font-medium">Explore</a>
+                <a href="#messages" class="text-gray-300 hover:text-purple-400 block px-3 py-2 rounded-md text-base font-medium">Messages</a>
+                <a href="#profile" class="text-gray-300 hover:text-purple-400 block px-3 py-2 rounded-md text-base font-medium">Profile</a>
+                <button onclick="showLoginModal()" class="bg-purple-600 hover:bg-purple-700 text-white block px-3 py-2 rounded-md text-base font-medium w-full mt-2">
+                    Login
+                </button>
+                <button onclick="showSignupModal()" class="bg-pink-600 hover:bg-pink-700 text-white block px-3 py-2 rounded-md text-base font-medium w-full mt-2">
+                    Sign Up
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900/20 via-pink-900/20 to-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div class="text-center">
+                <h1 class="text-5xl md:text-7xl font-bold mb-6">
+                    <span class="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                        Share Your Moments
+                    </span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                    Connect with friends, share your life, and discover amazing content on PictoGram
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button onclick="showSignupModal()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-all transform hover:scale-105">
+                        Get Started
+                    </button>
+                    <button onclick="scrollToSection('features')" class="bg-gray-800 hover:bg-gray-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-all border border-gray-700">
+                        Learn More
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-gray-800/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">Why Choose PictoGram?</h2>
+                <p class="text-xl text-gray-400">Experience social media reimagined</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all">
+                    <div class="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-camera text-white text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Share Moments</h3>
+                    <p class="text-gray-400">Upload photos and videos to share your life with friends and followers</p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all">
+                    <div class="w-12 h-12 bg-pink-600 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-comments text-white text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Real-time Chat</h3>
+                    <p class="text-gray-400">Message with friends in real-time with our advanced chat system</p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all">
+                    <div class="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-users text-white text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Connect & Follow</h3>
+                    <p class="text-gray-400">Follow interesting people and build your social network</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Explore Section -->
+    <section id="explore" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">Discover Amazing Content</h2>
+                <p class="text-xl text-gray-400">Explore posts from our community</p>
+            </div>
+            
+            <!-- Posts Grid -->
+            <div id="postsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Posts will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Messages Section -->
+    <section id="messages" class="py-20 bg-gray-800/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">Stay Connected</h2>
+                <p class="text-xl text-gray-400">Message your friends and followers</p>
+            </div>
+            
+            <!-- Messages List -->
+            <div id="messagesList" class="max-w-4xl mx-auto">
+                <!-- Messages will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Profile Section -->
+    <section id="profile" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4">Your Profile</h2>
+                <p class="text-xl text-gray-400">Manage your account and settings</p>
+            </div>
+            
+            <!-- Profile Content -->
+            <div id="profileContent" class="max-w-4xl mx-auto">
+                <!-- Profile will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-800 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        PictoGram
+                    </h3>
+                    <p class="text-gray-400">Share your moments with the world</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Product</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-purple-400 transition-colors">Features</a></li>
+                        <li><a href="#" class="hover:text-purple-400 transition-colors">Security</a></li>
+                        <li><a href="#" class="hover:text-purple-400 transition-colors">Pricing</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Company</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-purple-400 transition-colors">About</a></li>
+                        <li><a href="#" class="hover:text-purple-400 transition-colors">Blog</a></li>
+                        <li><a href="#" class="hover:text-purple-400 transition-colors">Careers</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Connect</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-purple-400 transition-colors">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-purple-400 transition-colors">
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-purple-400 transition-colors">
+                            <i class="fab fa-facebook text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
+                <p>&copy; 2024 PictoGram. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 border border-purple-500/20">
+            <h2 class="text-2xl font-bold mb-6 text-center">Welcome Back</h2>
+            <form onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2">Email</label>
+                    <input type="email" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white" placeholder="Enter your email">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-300 mb-2">Password</label>
+                    <input type="password" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white" placeholder="Enter your password">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-2 rounded-lg font-semibold transition-all">
+                    Login
+                </button>
+            </form>
+            <div class="mt-4 text-center">
+                <p class="text-gray-400">Don't have an account? <a href="#" onclick="switchToSignup()" class="text-purple-400 hover:text-purple-300">Sign up</a></p>
+            </div>
+            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <div id="signupModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 border border-purple-500/20">
+            <h2 class="text-2xl font-bold mb-6 text-center">Create Account</h2>
+            <form onsubmit="handleSignup(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2">Display Name</label>
+                    <input type="text" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white" placeholder="Choose a username">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2">Email</label>
+                    <input type="email" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white" placeholder="Enter your email">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-300 mb-2">Password</label>
+                    <input type="password" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white" placeholder="Create a password">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-2 rounded-lg font-semibold transition-all">
+                    Sign Up
+                </button>
+            </form>
+            <div class="mt-4 text-center">
+                <p class="text-gray-400">Already have an account? <a href="#" onclick="switchToLogin()" class="text-purple-400 hover:text-purple-300">Login</a></p>
+            </div>
+            <button onclick="closeModal('signupModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+</html>
