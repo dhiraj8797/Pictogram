@@ -737,6 +737,11 @@ class PictoGramApp {
             this.posts = postsWithUserInfo;
             console.log('DEBUG: Processed all posts:', this.posts.length);
             
+            // Also render explore section if user is logged in
+            if (this.currentUser) {
+                this.renderExplorePosts();
+            }
+            
         } catch (error) {
             console.error('Error loading all posts:', error);
             this.posts = [];
@@ -1106,6 +1111,41 @@ class PictoGramApp {
         
         // Load real suggestions
         this.loadSuggestions();
+        
+        // Also render explore posts
+        this.renderExplorePosts();
+    }
+
+    // Render explore posts (all posts)
+    renderExplorePosts() {
+        const explorePostsFeed = document.getElementById('explorePostsFeed');
+        if (!explorePostsFeed) return;
+        
+        // Use all posts (not just user's posts)
+        const allPosts = this.posts || [];
+        
+        if (allPosts.length === 0) {
+            explorePostsFeed.innerHTML = `
+                <div style="background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; padding: 60px 20px; text-align: center;">
+                    <i class="fas fa-camera" style="font-size: 48px; color: #8e8e8e; margin-bottom: 16px; display: block;"></i>
+                    <h3 style="color: white; margin-bottom: 8px;">No posts yet</h3>
+                    <p style="color: #8e8e8e; margin-bottom: 20px;">Be the first to share a moment with the community!</p>
+                    <button onclick="createNewPost()" style="background: #0095f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        Create your first post
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        // Sort by newest first
+        const sortedPosts = [...allPosts].sort((a, b) => {
+            const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+            const timeB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+            return timeB - timeA;
+        });
+        
+        explorePostsFeed.innerHTML = sortedPosts.map(post => this.renderInstagramPost(post)).join('');
     }
 
     // Load real stories from Firebase
@@ -1413,37 +1453,11 @@ class PictoGramApp {
 
     // Render posts
     renderPosts() {
-        const postsGrid = document.getElementById('postsGrid');
-        if (!postsGrid) return;
-
-        postsGrid.innerHTML = this.posts.map(post => `
-            <div class="post-card card-enter">
-                <div class="post-header">
-                    <img src="${post.avatar}" alt="${post.username}" class="post-avatar">
-                    <div class="post-info">
-                        <div class="post-username">${post.username}</div>
-                        <div class="post-time">${post.time}</div>
-                    </div>
-                </div>
-                <img src="${post.image}" alt="Post image" class="post-image">
-                <div class="post-content">
-                    <p class="text-gray-300 mb-3">${post.caption}</p>
-                    <div class="post-actions">
-                        <button class="post-action-btn ${post.liked ? 'liked' : ''}" onclick="toggleLike(${post.id})">
-                            <i class="${post.liked ? 'fas' : 'far'} fa-heart"></i>
-                            <span class="ml-1">${post.likes}</span>
-                        </button>
-                        <button class="post-action-btn" onclick="openComments(${post.id})">
-                            <i class="far fa-comment"></i>
-                            <span class="ml-1">${post.comments}</span>
-                        </button>
-                        <button class="post-action-btn" onclick="sharePost(${post.id})">
-                            <i class="fas fa-share"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
+        // This function is called during initialization
+        // We'll use renderExplorePosts for the main posts display
+        if (this.currentUser) {
+            this.renderExplorePosts();
+        }
     }
 
     // Render messages
