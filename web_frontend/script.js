@@ -10,6 +10,7 @@ class PictoGramApp {
     init() {
         this.loadSampleData();
         this.setupEventListeners();
+        this.setupPostActions();
         this.renderPosts();
         this.renderMessages();
         this.setupSmoothScrolling();
@@ -307,79 +308,66 @@ class PictoGramApp {
             `;
         } else {
             profileContent.innerHTML = `
-                <div class="bg-gray-800 rounded-xl p-8 border border-purple-500/20 text-center">
-                    <div class="text-gray-400 mb-4">Please login to view your profile</div>
-                    <button onclick="showLoginModal()" class="btn btn-primary">Login</button>
+                <div class="glass-card text-center">
+                    <div style="color: rgba(255,255,255,0.7); margin-bottom: 24px;">Please login to view your profile</div>
+                    <button onclick="showLoginModal()" class="btn-primary">Login</button>
                 </div>
             `;
         }
     }
 
     // Post actions
-    window.toggleLike = (postId) => {
-        const post = app.posts.find(p => p.id === postId);
-        if (post) {
-            post.liked = !post.liked;
-            post.likes += post.liked ? 1 : -1;
-            app.renderPosts();
-        }
-    };
-
-    window.openComments = (postId) => {
-        app.showNotification('Comments feature coming soon!', 'info');
-    };
-
-    window.sharePost = (postId) => {
-        const post = app.posts.find(p => p.id === postId);
-        if (post) {
-            // Simulate share
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Post by ' + post.username,
-                    text: post.caption,
-                    url: `https://pictogram.online/post/${postId}`
-                });
-            } else {
-                app.showNotification('Post link copied to clipboard!', 'success');
+    setupPostActions() {
+        window.toggleLike = (postId) => {
+            const post = this.posts.find(p => p.id === postId);
+            if (post) {
+                post.liked = !post.liked;
+                post.likes += post.liked ? 1 : -1;
+                this.renderPosts();
             }
-        }
-    };
+        };
 
-    window.openChat = (messageId) => {
-        const message = app.messages.find(m => m.id === messageId);
-        if (message) {
-            app.showNotification(`Opening chat with ${message.username}...`, 'info');
-        }
-    };
+        window.openComments = (postId) => {
+            this.showNotification('Comments feature coming soon!', 'info');
+        };
 
-    window.logout = () => {
-        this.currentUser = null;
-        location.reload();
-    };
-
-    // Utility functions
-    setupSmoothScrolling() {
-        window.scrollToSection = (sectionId) => {
-            const section = document.getElementById(sectionId);
-            if (section) {
-                section.scrollIntoView({ behavior: 'smooth' });
+        window.sharePost = (postId) => {
+            const post = this.posts.find(p => p.id === postId);
+            if (post) {
+                const shareUrl = `https://pictogram.online/post/${postId}`;
+                navigator.clipboard.writeText(shareUrl);
+                this.showNotification('Post link copied to clipboard!', 'success');
             }
         };
     }
 
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
-        notification.className = `fixed top-20 right-4 z-50 p-4 rounded-lg text-white max-w-sm fade-in ${
-            type === 'success' ? 'bg-green-600' : 
-            type === 'error' ? 'bg-red-600' : 
-            'bg-blue-600'
-        }`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 10000;
+            padding: 16px;
+            border-radius: 12px;
+            color: white;
+            max-width: 320px;
+            background: ${type === 'success' ? 'linear-gradient(135deg, #E0389A, #CC2299)' : 
+                         type === 'error' ? 'linear-gradient(135deg, #dc2626, #b91c1c)' : 
+                         'linear-gradient(135deg, #2563eb, #1d4ed8)'};
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.3s ease;
+        `;
         notification.textContent = message;
         
         document.body.appendChild(notification);
         
         setTimeout(() => {
-            notification.remove();
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
         }, 3000);
     }
 }
@@ -404,11 +392,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', () => {
         const nav = document.querySelector('nav');
         if (window.scrollY > 100) {
-            nav.classList.add('bg-gray-900/98');
-            nav.classList.remove('bg-gray-900/95');
+            nav.style.background = 'rgba(10, 0, 16, 0.98)';
         } else {
-            nav.classList.add('bg-gray-900/95');
-            nav.classList.remove('bg-gray-900/98');
+            nav.style.background = 'rgba(10, 0, 16, 0.95)';
         }
     });
 });

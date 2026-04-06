@@ -59,7 +59,7 @@
         </div>
         
         <!-- Mobile Navigation -->
-        <div id="mobileMenu" style="display: none; background: rgba(26, 8, 48, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+        <div id="mobileMenu" class="hidden">
             <div style="padding: 16px;">
                 <a href="#home" onclick="toggleMobileMenu()" style="color: white; display: block; padding: 12px; text-decoration: none; font-weight: 500;">Home</a>
                 <a href="#features" onclick="toggleMobileMenu()" style="color: rgba(255,255,255,0.7); display: block; padding: 12px; text-decoration: none; font-weight: 500;">Features</a>
@@ -234,7 +234,7 @@
     </footer>
 
     <!-- Modals -->
-    <div id="loginModal" class="modal-overlay" style="display: none;">
+    <div id="loginModal" class="modal-overlay hidden">
         <div class="modal-content">
             <h2 class="modal-title">Welcome Back</h2>
             <form onsubmit="handleLogin(event)">
@@ -259,7 +259,7 @@
         </div>
     </div>
 
-    <div id="signupModal" class="modal-overlay" style="display: none;">
+    <div id="signupModal" class="modal-overlay hidden">
         <div class="modal-content">
             <h2 class="modal-title">Create Account</h2>
             <form onsubmit="handleSignup(event)">
