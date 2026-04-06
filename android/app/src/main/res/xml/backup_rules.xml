@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- Exclude all shared preferences (may contain tokens/hue settings) -->
+    <exclude domain="sharedpref" path="." />
+    <!-- Exclude all internal files -->
+    <exclude domain="file" path="." />
+    <!-- Exclude databases -->
+    <exclude domain="database" path="." />
+    <!-- Exclude external storage -->
+    <exclude domain="external" path="." />
+    <!-- Exclude Flutter engine cache -->
+    <exclude domain="file" path="flutter_engine_cache" />
+</full-backup-content>

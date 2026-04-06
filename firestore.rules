@@ -1,0 +1,262 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isValidString(value) {
+      return value is string && value.size() > 0 && value.size() <= 500;
+    }
+    
+    function isValidUsername(value) {
+      return value is string && 
+             value.size() >= 3 && 
+             value.size() <= 30 &&
+             value.matches('^[a-zA-Z0-9_]+$');
+    }
+    
+    function isValidBio(value) {
+      return value is string && value.size() <= 160;
+    }
+    
+    function isValidCommentText(value) {
+      return value is string && 
+             value.size() >= 1 && 
+             value.size() <= 300;
+    }
+    
+    function isValidCaption(value) {
+      return value is string && value.size() <= 100;
+    }
+    
+    function isValidUrl(value) {
+      return value is string && 
+             value.size() > 10 && 
+             value.size() <= 500 &&
+             value.matches('^https?://.*');
+    }
+
+    // Rate limiting helper (simplified - real rate limiting needs Cloud Functions)
+    function isWithinRateLimit(userId, action, limit) {
+      // This is a basic check - real rate limiting should be in Cloud Functions
+      return true;
+    }
+
+    // Users collection with enhanced security
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null 
+        && request.auth.uid == userId
+        && isValidString(request.resource.data.username)
+        && isValidUsername(request.resource.data.username)
+        && isValidBio(request.resource.data.bio)
+        && (request.resource.data.profileImage == null || isValidUrl(request.resource.data.profileImage))
+        && (request.resource.data.phoneNumber == null || 
+            (request.resource.data.phoneNumber is string && 
+             request.resource.data.phoneNumber.matches('^\\+[1-9]\\d{1,14}$')))
+        && request.resource.data.tier in ['free', 'pro', 'enterprise']
+        && request.resource.data.createdAt == request.time;
+      allow update: if request.auth != null 
+        && request.auth.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'displayName', 'bio', 'profileImage', 'tier', 'tierUpdatedAt'
+          ])
+        && (request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName', 'bio', 'profileImage']) == false ||
+            (isValidString(request.resource.data.displayName) || request.resource.data.displayName == null) &&
+            (isValidBio(request.resource.data.bio) || request.resource.data.bio == null) &&
+            (isValidUrl(request.resource.data.profileImage) || request.resource.data.profileImage == null))
+        && (request.resource.data.diff(resource.data).affectedKeys().hasAny(['tier']) == false ||
+            request.resource.data.tier in ['free', 'pro', 'enterprise']);
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Posts collection with strict validation
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.ownerId == request.auth.uid
+        && isValidString(request.resource.data.imageUrl)
+        && isValidUrl(request.resource.data.imageUrl)
+        && isValidCaption(request.resource.data.caption)
+        && request.resource.data.likesCount == 0
+        && request.resource.data.commentsCount == 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.aspectRatio > 0
+        && request.resource.data.aspectRatio < 10;
+      allow update: if request.auth != null
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['caption'])
+        && isValidCaption(request.resource.data.caption);
+      allow delete: if request.auth != null
+        && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Likes subcollection with ownership and rate limiting
+    match /posts/{postId}/likes/{userId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.userId == userId
+        && request.resource.data.createdAt == request.time
+        && isWithinRateLimit(userId, 'like', 30); // 30 likes per minute
+      allow delete: if request.auth != null
+        && request.auth.uid == userId;
+    }
+
+    // Comments collection with enhanced validation
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && isValidString(request.resource.data.postId)
+        && isValidString(request.resource.data.username)
+        && isValidCommentText(request.resource.data.text)
+        && request.resource.data.likesCount == 0
+        && request.resource.data.isVerifiedComment == true
+        && request.resource.data.createdAt == request.time
+        && isWithinRateLimit(request.auth.uid, 'comment', 10); // 10 comments per 5 minutes
+      allow update: if request.auth != null
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text'])
+        && isValidCommentText(request.resource.data.text);
+      allow delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Comment likes with rate limiting
+    match /comments/{commentId}/likes/{userId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.userId == userId
+        && request.resource.data.createdAt == request.time
+        && isWithinRateLimit(userId, 'comment_like', 20); // 20 comment likes per minute
+      allow delete: if request.auth != null
+        && request.auth.uid == userId;
+    }
+
+    // Follows collection with duplicate prevention
+    match /follows/{followId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.followerId == request.auth.uid
+        && isValidString(request.resource.data.followerId)
+        && isValidString(request.resource.data.followingId)
+        && isValidString(request.resource.data.followerUsername)
+        && isValidString(request.resource.data.followingUsername)
+        && request.resource.data.followerId != request.resource.data.followingId
+        && request.resource.data.createdAt == request.time
+        && isWithinRateLimit(request.auth.uid, 'follow', 50); // 50 follows per hour
+      allow delete: if request.auth != null
+        && resource.data.followerId == request.auth.uid;
+    }
+
+    // Stories collection with strict validation
+    match /stories/{storyId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.ownerId == request.auth.uid
+        && isValidString(request.resource.data.imageUrl)
+        && isValidUrl(request.resource.data.imageUrl)
+        && isValidCaption(request.resource.data.caption)
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.seenBy is list
+        && request.resource.data.seenBy.size() == 0
+        && request.resource.data.createdAt == request.time
+        && (request.resource.data.expiresAt.toDate() - request.time.toDate()).inDays() <= 1; // Max 24 hours
+      allow update: if request.auth != null
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenBy']);
+      allow delete: if request.auth != null
+        && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Notifications collection - backend only
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+      allow create: if false; // Only Cloud Functions can create notifications
+      allow update: if request.auth != null
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead'])
+        && request.resource.data.isRead == true;
+      allow delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+    }
+
+    // Usage logs for cost control
+    match /usage_logs/{logId} {
+      allow read: if false; // Private
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.type in ['read', 'write', 'storage']
+        && request.resource.data.timestamp == request.time;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Abuse logs - admin only
+    match /abuse_logs/{logId} {
+      allow read: if false; // Admin only
+      allow create: if false; // Only Cloud Functions
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Performance metrics - admin only
+    match /performance_metrics/{metricId} {
+      allow read: if false; // Admin only
+      allow create: if false; // Only Cloud Functions
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Feed performance - admin only
+    match /feed_performance/{metricId} {
+      allow read: if false; // Admin only
+      allow create: if false; // Only Cloud Functions
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Comment reports
+    match /comment_reports/{reportId} {
+      allow read: if false; // Private
+      allow create: if request.auth != null
+        && request.resource.data.reporterId == request.auth.uid
+        && isValidString(request.resource.data.commentId)
+        && isValidString(request.resource.data.reason)
+        && request.resource.data.reason in ['spam', 'inappropriate', 'harassment', 'other']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // User blocks
+    match /user_blocks/{blockId} {
+      allow read: if request.auth != null
+        && (resource.data.blockerId == request.auth.uid || resource.data.blockedId == request.auth.uid);
+      allow create: if request.auth != null
+        && request.resource.data.blockerId == request.auth.uid
+        && isValidString(request.resource.data.blockedId)
+        && request.resource.data.blockerId != request.resource.data.blockedId
+        && request.resource.data.createdAt == request.time;
+      allow delete: if request.auth != null
+        && resource.data.blockerId == request.auth.uid;
+    }
+
+    // User reports
+    match /user_reports/{reportId} {
+      allow read: if false; // Private
+      allow create: if request.auth != null
+        && request.resource.data.reporterId == request.auth.uid
+        && isValidString(request.resource.data.reportedUserId)
+        && request.resource.data.reporterId != request.resource.data.reportedUserId
+        && isValidString(request.resource.data.reason)
+        && request.resource.data.reason in ['spam', 'inappropriate', 'harassment', 'fake_account', 'other']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}

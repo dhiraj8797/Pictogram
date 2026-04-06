@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "793414644362",
+    "project_id": "pictogram-af7c8",
+    "storage_bucket": "pictogram-af7c8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:793414644362:android:a32b3dde636591a50c3373",
+        "android_client_info": {
+          "package_name": "com.pictogram.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "793414644362-gbjn8km7cdmv2v6d0heikevvhk32je45.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pictogram.app",
+            "certificate_hash": "c45dd914ccdb27f595ce7b04dd7ec50258b35519"
+          }
+        },
+        {
+          "client_id": "793414644362-2p89mve9r6dd2knnn7hmsd460u3m0fqg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB72KxNCbgSNHMOm-zaLuCkT1e6GOsidJI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "793414644362-2p89mve9r6dd2knnn7hmsd460u3m0fqg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "pictogram-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Pictogram email service and auth backend",
+  "main": "server.js",
+  "scripts": {
+    "test": "node -e \"import('./pictogram_email_service.js').then(m => m.verifyEmailTransport())\"",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.13",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.3.0"
+  }
+}

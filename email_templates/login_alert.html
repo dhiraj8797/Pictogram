@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New login detected</title>
+</head>
+<body style="margin:0;padding:0;background:#090b12;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="padding:32px 16px;background:#090b12;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#101322;border:1px solid #2a2d4d;border-radius:24px;overflow:hidden;">
+          <tr>
+            <td style="padding:28px 28px 20px;background:linear-gradient(135deg,#1d4ed8 0%,#6d28d9 60%,#111322 100%);">
+              <h1 style="margin:0;color:#ffffff;font-size:28px;line-height:1.25;">New login detected</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:30px 28px;">
+              <p style="margin:0 0 14px;color:#ffffff;font-size:16px;">Hi {{userName}},</p>
+              <p style="margin:0 0 18px;color:#cbd5e1;font-size:15px;line-height:1.9;">We noticed a login to your Pictogram account from a new device or browser.</p>
+              <div style="padding:18px 20px;background:#0b0d1a;border:1px solid #31355f;border-radius:18px;">
+                <p style="margin:0 0 8px;color:#ffffff;font-size:14px;font-weight:700;">Login details</p>
+                <p style="margin:0;color:#cbd5e1;font-size:14px;line-height:1.8;">Time: {{loginTime}}<br>Device: {{deviceName}}<br>Location: {{location}}</p>
+              </div>
+              <p style="margin:18px 0 0;color:#cbd5e1;font-size:14px;line-height:1.8;">If this was you, no action is needed. If not, reset your password immediately.</p>
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin:26px 0 0;">
+                <tr>
+                  <td bgcolor="#ef4444" style="border-radius:14px;">
+                    <a href="{{resetLink}}" style="display:inline-block;padding:14px 24px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;">Secure My Account</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:22px 28px 34px;border-top:1px solid #222445;color:#94a3b8;font-size:12px;line-height:1.8;">
+              Pictogram Security Team<br>
+              <a href="mailto:support@pictogram.online" style="color:#c4b5fd;text-decoration:none;">support@pictogram.online</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

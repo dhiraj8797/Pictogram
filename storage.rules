@@ -1,0 +1,17 @@
+rules_version = '2';
+service firebase.storage {
+  match /posts/{userId}/{imageId} {
+    allow read: if true;                    // Anyone can read images (public social app)
+    allow write: if request.auth != null && request.auth.uid == userId; // Only owner can upload
+  }
+  
+  match /profileImages/{userId}/{imageId} {
+    allow read: if true;                    // Anyone can read profile images
+    allow write: if request.auth != null && request.auth.uid == userId; // Only owner can upload
+  }
+  
+  match /storyImages/{userId}/{imageId} {
+    allow read: if true;                    // Anyone can read story images
+    allow write: if request.auth != null && request.auth.uid == userId; // Only owner can upload
+  }
+}

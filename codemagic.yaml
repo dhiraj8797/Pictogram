@@ -1,0 +1,48 @@
+# Codemagic configuration for PictoGram iOS builds
+ workflows:
+   ios-workflow:
+     name: iOS Build
+     environment:
+       vars:
+         FLUTTER_VERSION: "3.19.6"
+       xcode: latest
+       cocoapods: default
+     cache:
+       cache_paths:
+         - ~/.pub-cache
+     triggering:
+       events:
+         - push
+         - pull_request
+       branch_patterns:
+         - pattern: main
+           include: true
+         - pattern: develop
+           include: true
+     scripts:
+       - name: Set up Flutter
+         script: |
+           flutter version $FLUTTER_VERSION
+           flutter precache --ios
+       - name: Get Flutter dependencies
+         script: |
+           flutter pub get
+       - name: Install CocoaPods
+         script: |
+           cd ios && pod install
+       - name: Build iOS app
+         script: |
+           flutter build ios --release --no-codesign
+       - name: Create IPA
+         script: |
+           mkdir -p build/ios/ipa
+           cp -r build/ios/iphoneos/Runner.app build/ios/ipa/
+           cd build/ios/ipa
+           zip -r PictoGram.ipa Runner.app
+     artifacts:
+       - build/ios/ipa/PictoGram.ipa
+       - build/ios/ipa/Runner.app
+     publishing:
+       email:
+         recipients:
+           - your-email@example.com

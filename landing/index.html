@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PictoGram — Share Your World</title>
+  <meta name="description" content="PictoGram is the premium photo-sharing social platform. Share moments, discover stories, and connect with the world." />
+  <meta property="og:title" content="PictoGram — Share Your World" />
+  <meta property="og:description" content="The premium photo-sharing social platform." />
+  <meta property="og:url" content="https://pictogram.online" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-dark:   #100712;
+      --bg-mid:    #170813;
+      --bg-top:    #250414;
+      --pink:      #ff3d87;
+      --coral:     #ff6a5c;
+      --card:      rgba(255,255,255,0.05);
+      --card-top:  rgba(255,255,255,0.08);
+      --card-bot:  rgba(255,255,255,0.03);
+      --border:    rgba(255,255,255,0.10);
+      --glow:      rgba(255,61,135,0.22);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /* ── Background layers ──────────────────────────────────────── */
+    .bg-wrap {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    }
+    .bg-wrap::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 38%, var(--bg-dark) 100%);
+    }
+    .bg-wrap::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, var(--glow) 0%, transparent 60%);
+    }
+    .bg-glow-bottom {
+      position: absolute;
+      bottom: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(255,106,92,0.12) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    /* ── Utility ────────────────────────────────────────────────── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+    .gradient-text {
+      background: linear-gradient(90deg, var(--pink), var(--coral));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .glass-card {
+      background: linear-gradient(180deg, var(--card-top), var(--card-bot));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 28px;
+      background: linear-gradient(90deg, var(--pink), var(--coral));
+      color: #fff; font-weight: 700; font-size: 15px;
+      border-radius: 14px; border: none; cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 8px 24px rgba(255,61,135,0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(255,61,135,0.45); }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 13px 27px;
+      background: rgba(255,255,255,0.06);
+      color: #fff; font-weight: 600; font-size: 15px;
+      border-radius: 14px; border: 1px solid var(--border); cursor: pointer;
+      text-decoration: none;
+      backdrop-filter: blur(10px);
+      transition: background 0.2s, transform 0.2s;
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.11); transform: translateY(-2px); }
+    .section-tag {
+      display: inline-block;
+      padding: 5px 14px;
+      background: rgba(255,61,135,0.14);
+      border: 1px solid rgba(255,61,135,0.28);
+      border-radius: 50px;
+      color: var(--pink);
+      font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    /* ── Nav ────────────────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 16px 0;
+      background: rgba(16,7,18,0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--pink), var(--coral));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(255,61,135,0.4);
+    }
+    .nav-logo-icon svg { width: 20px; height: 20px; fill: #fff; }
+    .nav-logo-text { font-size: 18px; font-weight: 800; color: #fff; }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-links a { color: rgba(255,255,255,0.65); font-size: 14px; font-weight: 500; text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta { padding: 9px 20px; font-size: 14px; border-radius: 10px; }
+    @media (max-width: 700px) { .nav-links { display: none; } }
+
+    /* ── Hero ───────────────────────────────────────────────────── */
+    .hero {
+      padding: 160px 0 100px;
+      text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      color: rgba(255,255,255,0.7);
+      font-size: 13px; font-weight: 500;
+      margin-bottom: 28px;
+    }
+    .hero-eyebrow span { color: var(--pink); font-weight: 700; }
+    .hero h1 {
+      font-size: clamp(42px, 7vw, 82px);
+      font-weight: 900; line-height: 1.08; letter-spacing: -2px;
+      margin-bottom: 22px;
+    }
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 19px);
+      color: rgba(255,255,255,0.58);
+      max-width: 520px; margin: 0 auto 40px;
+      line-height: 1.65;
+    }
+    .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .hero-stores {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .store-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 18px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      text-decoration: none; color: #fff;
+      font-size: 13px; font-weight: 600;
+      transition: background 0.2s;
+    }
+    .store-btn:hover { background: rgba(255,255,255,0.12); }
+    .store-btn svg { width: 20px; height: 20px; fill: #fff; }
+
+    /* ── Phone mockup ───────────────────────────────────────────── */
+    .mockup-section {
+      position: relative; padding: 20px 0 80px;
+      display: flex; justify-content: center;
+    }
+    .phone-frame {
+      position: relative; z-index: 2;
+      width: 260px;
+      background: #1a0a20;
+      border-radius: 40px;
+      border: 2px solid rgba(255,255,255,0.12);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.06),
+        0 40px 80px rgba(0,0,0,0.7),
+        0 0 80px rgba(255,61,135,0.18);
+      overflow: hidden;
+      padding: 12px;
+    }
+    .phone-screen {
+      background: var(--bg-mid);
+      border-radius: 30px;
+      overflow: hidden;
+      aspect-ratio: 9/19;
+      display: flex; flex-direction: column;
+    }
+    .phone-topbar {
+      background: linear-gradient(180deg, var(--bg-top), var(--bg-mid));
+      padding: 16px 14px 10px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .phone-topbar-logo { font-size: 13px; font-weight: 800; }
+    .phone-topbar-icons { display: flex; gap: 8px; }
+    .phone-topbar-icons div {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+    }
+    .phone-stories {
+      display: flex; gap: 8px; padding: 10px 12px;
+      overflow: hidden;
+    }
+    .phone-story {
+      flex-shrink: 0;
+      width: 42px; height: 42px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--pink), var(--coral));
+      padding: 2px;
+    }
+    .phone-story-inner {
+      width: 100%; height: 100%; border-radius: 50%;
+      background: var(--bg-mid);
+    }
+    .phone-post {
+      margin: 0 10px 10px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .phone-post-img {
+      width: 100%; aspect-ratio: 1;
+      background: linear-gradient(135deg, #2a0a32, #1a0520, #300d1a);
+    }
+    .phone-post-actions {
+      padding: 8px 10px 6px;
+      display: flex; gap: 10px; align-items: center;
+    }
+    .phone-post-actions div {
+      width: 14px; height: 14px; border-radius: 2px;
+      background: rgba(255,255,255,0.2);
+    }
+    .phone-post-actions div:first-child {
+      background: var(--pink); border-radius: 50%;
+    }
+
+    /* Glow rings behind phone */
+    .phone-glow {
+      position: absolute;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,61,135,0.15) 0%, transparent 65%);
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+
+    /* ── Stats strip ────────────────────────────────────────────── */
+    .stats {
+      padding: 60px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 36px; font-weight: 900;
+      background: linear-gradient(90deg, var(--pink), var(--coral));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label { color: rgba(255,255,255,0.45); font-size: 13px; margin-top: 4px; }
+    @media (max-width: 600px) { .stats-grid { grid-template-columns: repeat(2,1fr); } }
+
+    /* ── Features ───────────────────────────────────────────────── */
+    .features { padding: 100px 0; text-align: center; }
+    .features h2 { font-size: clamp(32px,5vw,52px); font-weight: 800; margin-bottom: 14px; }
+    .features-sub { color: rgba(255,255,255,0.5); font-size: 16px; max-width: 480px; margin: 0 auto 56px; }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+    }
+    .feat-card {
+      padding: 28px 24px; text-align: left;
+      transition: transform 0.25s;
+    }
+    .feat-card:hover { transform: translateY(-4px); }
+    .feat-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--pink), var(--coral));
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 18px;
+      box-shadow: 0 6px 18px rgba(255,61,135,0.3);
+    }
+    .feat-icon svg { width: 24px; height: 24px; fill: #fff; }
+    .feat-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .feat-desc { color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6; }
+    @media (max-width: 768px) { .features-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 500px) { .features-grid { grid-template-columns: 1fr; } }
+
+    /* ── How it works ───────────────────────────────────────────── */
+    .how { padding: 80px 0 100px; text-align: center; }
+    .how h2 { font-size: clamp(32px,5vw,52px); font-weight: 800; margin-bottom: 14px; }
+    .how-sub { color: rgba(255,255,255,0.5); font-size: 16px; max-width: 440px; margin: 0 auto 56px; }
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 24px;
+    }
+    .step-card { padding: 32px 24px; text-align: center; }
+    .step-num {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--pink), var(--coral));
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 20px; font-weight: 900;
+      box-shadow: 0 6px 20px rgba(255,61,135,0.35);
+    }
+    .step-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+    .step-desc { color: rgba(255,255,255,0.48); font-size: 14px; line-height: 1.65; }
+    @media (max-width: 640px) { .steps-grid { grid-template-columns: 1fr; } }
+
+    /* ── CTA ────────────────────────────────────────────────────── */
+    .cta-section { padding: 80px 0 100px; text-align: center; }
+    .cta-card {
+      padding: 60px 40px;
+      background: linear-gradient(135deg, rgba(255,61,135,0.12), rgba(255,106,92,0.06));
+      border: 1px solid rgba(255,61,135,0.22);
+      border-radius: 28px;
+      backdrop-filter: blur(20px);
+      position: relative; overflow: hidden;
+    }
+    .cta-card::before {
+      content: '';
+      position: absolute; top: -80px; right: -80px;
+      width: 300px; height: 300px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,61,135,0.18), transparent 70%);
+    }
+    .cta-card h2 { font-size: clamp(28px,4vw,46px); font-weight: 900; margin-bottom: 14px; }
+    .cta-card p { color: rgba(255,255,255,0.55); font-size: 16px; max-width: 400px; margin: 0 auto 36px; }
+    .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+    }
+    .footer-inner {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;
+    }
+    .footer-copy { color: rgba(255,255,255,0.35); font-size: 13px; }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { color: rgba(255,255,255,0.4); font-size: 13px; text-decoration: none; transition: color 0.2s; }
+    .footer-links a:hover { color: rgba(255,255,255,0.8); }
+
+    /* ── Animations ─────────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim { animation: fadeUp 0.7s ease both; }
+    .anim-d1 { animation-delay: 0.1s; }
+    .anim-d2 { animation-delay: 0.22s; }
+    .anim-d3 { animation-delay: 0.34s; }
+    .anim-d4 { animation-delay: 0.46s; }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-wrap"><div class="bg-glow-bottom"></div></div>
+
+<!-- Nav -->
+<nav>
+  <div class="container nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+      </div>
+      <span class="nav-logo-text">PictoGram</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#download">Download</a>
+    </div>
+    <a href="#download" class="btn-primary nav-cta">Get the App</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-eyebrow anim anim-d1">✦ <span>Now available</span> on Android &amp; iOS</div>
+    <h1 class="anim anim-d2">
+      Share Your<br />
+      <span class="gradient-text">World.</span>
+    </h1>
+    <p class="hero-sub anim anim-d3">
+      PictoGram is the premium photo-sharing social platform. Post moments, explore stories, and connect with people who matter.
+    </p>
+    <div class="hero-btns anim anim-d4">
+      <a href="#download" class="btn-primary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.39-1.32 2.76-2.53 3.99zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+        App Store
+      </a>
+      <a href="#download" class="btn-outline">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76c.35.19.75.19 1.09 0L14.1 12 4.27.24C3.93.05 3.53.05 3.18.24 2.83.44 2.6.81 2.6 1.22v21.56c0 .41.23.78.58.98zM17.5 9.46l-2.56-1.46-2.97 4 2.97 4 2.59-1.47c.84-.48 1.36-1.36 1.36-2.53 0-1.17-.52-2.06-1.39-2.54zM5.85 2.34l9.72 9.66-2.41 2.41L5.85 2.34zm0 19.32l7.31-7.31 2.41 2.41-9.72 4.9z"/></svg>
+        Google Play
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Phone mockup -->
+<div class="mockup-section">
+  <div class="phone-glow"></div>
+  <div class="phone-frame anim anim-d3">
+    <div class="phone-screen">
+      <div class="phone-topbar">
+        <span class="phone-topbar-logo gradient-text">PictoGram</span>
+        <div class="phone-topbar-icons">
+          <div></div><div></div><div></div>
+        </div>
+      </div>
+      <div class="phone-stories">
+        <div class="phone-story"><div class="phone-story-inner"></div></div>
+        <div class="phone-story"><div class="phone-story-inner"></div></div>
+        <div class="phone-story"><div class="phone-story-inner"></div></div>
+        <div class="phone-story"><div class="phone-story-inner"></div></div>
+      </div>
+      <div class="phone-post">
+        <div class="phone-post-img" style="background:linear-gradient(135deg,#3a0d40,#1f0830,#420c1e);"></div>
+        <div class="phone-post-actions">
+          <div></div><div></div><div></div>
+        </div>
+      </div>
+      <div class="phone-post">
+        <div class="phone-post-img" style="background:linear-gradient(135deg,#1f0428,#2d0818,#1a0c2e);"></div>
+        <div class="phone-post-actions">
+          <div></div><div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats -->
+<section class="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div><div class="stat-num">1M+</div><div class="stat-label">Photos shared daily</div></div>
+      <div><div class="stat-num">500K+</div><div class="stat-label">Active users</div></div>
+      <div><div class="stat-num">150+</div><div class="stat-label">Countries</div></div>
+      <div><div class="stat-num">4.9★</div><div class="stat-label">App store rating</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-tag">Features</div>
+    <h2>Everything you <span class="gradient-text">love</span>, perfected.</h2>
+    <p class="features-sub">Built for creators, made for everyone. A social experience like no other.</p>
+    <div class="features-grid">
+
+      <div class="feat-card glass-card">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+        </div>
+        <div class="feat-title">Stories</div>
+        <div class="feat-desc">Share fleeting moments with your followers. Stories vanish in 24 hours, keeping your feed fresh.</div>
+      </div>
+
+      <div class="feat-card glass-card">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24"><path d="M16.5 3C14.76 3 13.09 3.81 12 5.09 10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3z"/></svg>
+        </div>
+        <div class="feat-title">Smart Feed</div>
+        <div class="feat-desc">A personalized feed curated by what you love. Discover new creators and trending moments.</div>
+      </div>
+
+      <div class="feat-card glass-card">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+        </div>
+        <div class="feat-title">Comments</div>
+        <div class="feat-desc">Rich commenting with Aadhaar-verified profiles. No fake accounts, just real conversations.</div>
+      </div>
+
+      <div class="feat-card glass-card">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
+        </div>
+        <div class="feat-title">Location Tags</div>
+        <div class="feat-desc">Pin your posts to places. Explore photos from anywhere in the world on an interactive map.</div>
+      </div>
+
+      <div class="feat-card glass-card">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+        </div>
+        <div class="feat-title">Explore</div>
+        <div class="feat-desc">Browse trending hashtags, featured creators, and viral posts from around the globe.</div>
+      </div>
+
+      <div class="feat-card glass-card">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+        </div>
+        <div class="feat-title">Privacy First</div>
+        <div class="feat-desc">Granular privacy controls. Choose who sees what with fine-grained audience settings.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="section-tag">How it works</div>
+    <h2>Up and running in <span class="gradient-text">minutes.</span></h2>
+    <p class="how-sub">Getting started with PictoGram is simple and completely free.</p>
+    <div class="steps-grid">
+      <div class="step-card glass-card">
+        <div class="step-num">1</div>
+        <div class="step-title">Create your account</div>
+        <div class="step-desc">Sign up with your email or phone number. Your profile is set up in seconds.</div>
+      </div>
+      <div class="step-card glass-card">
+        <div class="step-num">2</div>
+        <div class="step-title">Share your first photo</div>
+        <div class="step-desc">Tap the camera, add a caption and location, then post to your followers instantly.</div>
+      </div>
+      <div class="step-card glass-card">
+        <div class="step-num">3</div>
+        <div class="step-title">Grow your circle</div>
+        <div class="step-desc">Follow creators you love, get followers, and build your audience organically.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA / Download -->
+<section class="cta-section" id="download">
+  <div class="container">
+    <div class="cta-card">
+      <div class="section-tag">Download</div>
+      <h2>Ready to join<br /><span class="gradient-text">PictoGram?</span></h2>
+      <p>Available free on Android and iOS. No credit card required.</p>
+      <div class="cta-btns">
+        <a href="#" class="btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.7 9.05 7.4c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.39-1.32 2.76-2.53 3.99zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+          Download for iOS
+        </a>
+        <a href="#" class="btn-outline">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76c.35.19.75.19 1.09 0L14.1 12 4.27.24C3.93.05 3.53.05 3.18.24 2.83.44 2.6.81 2.6 1.22v21.56c0 .41.23.78.58.98zM17.5 9.46l-2.56-1.46-2.97 4 2.97 4 2.59-1.47c.84-.48 1.36-1.36 1.36-2.53 0-1.17-.52-2.06-1.39-2.54zM5.85 2.34l9.72 9.66-2.41 2.41L5.85 2.34zm0 19.32l7.31-7.31 2.41 2.41-9.72 4.9z"/></svg>
+          Download for Android
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container footer-inner">
+    <div class="footer-copy">© 2026 PictoGram · pictogram.online</div>
+    <div class="footer-links">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="mailto:hello@pictogram.online">Contact</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

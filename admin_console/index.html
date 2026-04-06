@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PictoGram Admin Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; }
+    .sidebar-item.active { background: #4f46e5; color: white; }
+    .sidebar-item:hover:not(.active) { background: #312e81; color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .badge-green  { background:#d1fae5;color:#065f46; }
+    .badge-red    { background:#fee2e2;color:#991b1b; }
+    .badge-yellow { background:#fef9c3;color:#713f12; }
+    .badge-blue   { background:#dbeafe;color:#1e40af; }
+    .badge-purple { background:#ede9fe;color:#4c1d95; }
+    .sidebar-item.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.2));
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: white;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+    }
+    .sidebar-item:hover:not(.active) {
+      background: rgba(99, 102, 241, 0.15);
+      color: white;
+    }
+    .glass-card {
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.8), rgba(31, 41, 55, 0.6));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+    }
+    .glass-card:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+    }
+    .stat-card {
+      background: linear-gradient(135deg, rgba(17, 24, 39, 0.9), rgba(31, 41, 55, 0.7));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+    .heatmap-cell {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      transition: transform 0.2s;
+    }
+    .heatmap-cell:hover {
+      transform: scale(1.2);
+      z-index: 10;
+    }
+    .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:50; justify-content:center; align-items:center; }
+    .modal.open { display:flex; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+<!-- ════════ LOGIN PAGE ════════ -->
+<div id="loginPage" class="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-gray-950">
+  <div class="bg-gray-900 border border-indigo-800 rounded-2xl p-10 w-full max-w-md shadow-2xl">
+    <div class="text-center mb-8">
+      <div class="text-5xl mb-3">📸</div>
+      <h1 class="text-2xl font-bold text-white">PictoGram</h1>
+      <p class="text-indigo-300 text-sm mt-1">Admin Console</p>
+    </div>
+    <div id="loginError" class="hidden bg-red-900 border border-red-700 text-red-200 text-sm rounded-lg px-4 py-3 mb-4"></div>
+    <div class="space-y-4">
+      <div>
+        <label class="text-xs text-gray-400 uppercase tracking-wider">Admin Email</label>
+        <input id="loginEmail" type="email" placeholder="admin@pictogram.app"
+          class="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500" />
+      </div>
+      <div>
+        <label class="text-xs text-gray-400 uppercase tracking-wider">Password</label>
+        <input id="loginPassword" type="password" placeholder="••••••••"
+          class="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500" />
+      </div>
+      <button onclick="login()"
+        class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-lg transition mt-2" id="loginBtn">
+        Sign In as Admin
+      </button>
+    </div>
+    <p class="text-gray-600 text-xs text-center mt-6">Access restricted to admin accounts only</p>
+    <p class="text-gray-700 text-xs text-center mt-2">
+      Use email/password only. <a href="https://console.firebase.google.com/project/pictogram-af7c8/authentication/users" target="_blank" class="text-indigo-500 hover:underline">Create admin account →</a>
+    </p>
+  </div>
+</div>
+
+<!-- ════════ MAIN CONSOLE ════════ -->
+<div id="consolePage" class="hidden flex min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="w-64 bg-gray-900/95 border-r border-gray-800/50 flex flex-col flex-shrink-0 backdrop-blur-xl">
+    <div class="p-6 border-b border-gray-800/50">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xl shadow-lg shadow-indigo-500/30">
+          📸
+        </div>
+        <div>
+          <p class="font-bold text-white text-sm tracking-wide">PictoGram</p>
+          <p class="text-indigo-400 text-xs">Control Center</p>
+        </div>
+      </div>
+    </div>
+
+    <nav class="flex-1 p-4 space-y-1">
+      <button onclick="showTab('dashboard')" class="sidebar-item active w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition-all duration-200" id="nav-dashboard">
+        <span class="text-lg">🏠</span> Dashboard
+      </button>
+      <button onclick="showTab('analytics')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition-all duration-200" id="nav-analytics">
+        <span class="text-lg">📊</span> Analytics
+      </button>
+      <button onclick="showTab('users')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition-all duration-200" id="nav-users">
+        <span class="text-lg">👥</span> Users
+      </button>
+      <button onclick="showTab('posts')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition-all duration-200" id="nav-posts">
+        <span class="text-lg">🖼️</span> Posts
+      </button>
+      <button onclick="showTab('reports')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition-all duration-200" id="nav-reports">
+        <span class="text-lg">🚩</span> Reports
+        <span id="reportsBadge" class="hidden ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-0.5 font-bold"></span>
+      </button>
+      <button onclick="showTab('announcements')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition-all duration-200" id="nav-announcements">
+        <span class="text-lg">📢</span> Announcements
+      </button>
+      <button onclick="showTab('security')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition-all duration-200" id="nav-security">
+        <span class="text-lg">🛡️</span> Security
+      </button>
+      <button onclick="showTab('settings')" class="sidebar-item w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition-all duration-200" id="nav-settings">
+        <span class="text-lg">⚙️</span> Settings
+      </button>
+    </nav>
+
+    <div class="p-4 border-t border-gray-800/50">
+      <div id="adminInfo" class="text-xs text-gray-500 mb-3 px-2"></div>
+      <button onclick="logout()" class="w-full bg-gradient-to-r from-red-900/80 to-red-800/80 hover:from-red-800 hover:to-red-700 text-red-200 text-sm py-2.5 rounded-xl transition-all duration-200 border border-red-700/30">
+        🚪 Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <!-- Content Area -->
+  <main class="flex-1 overflow-auto bg-gray-950">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="tab-dashboard" class="tab-content active p-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-white">Dashboard</h2>
+        <button onclick="loadDashboard()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg transition">&#8635; Refresh</button>
+      </div>
+
+      <!-- Stat cards row 1 -->
+      <div class="grid grid-cols-3 gap-4 mb-4">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase tracking-wider">Total Users</p>
+          <p id="statUsers" class="text-3xl font-bold text-white mt-1">—</p>
+          <p id="statUsersNew" class="text-xs text-green-400 mt-1"></p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase tracking-wider">Total Posts</p>
+          <p id="statPosts" class="text-3xl font-bold text-white mt-1">—</p>
+          <p id="statPostsNew" class="text-xs text-blue-400 mt-1"></p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase tracking-wider">Open Reports</p>
+          <p id="statReports" class="text-3xl font-bold text-red-400 mt-1">—</p>
+          <p class="text-xs text-gray-500 mt-1">Requires review</p>
+        </div>
+      </div>
+
+      <!-- Stat cards row 2 -->
+      <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase tracking-wider">Verified Users</p>
+          <p id="statVerified" class="text-3xl font-bold text-purple-400 mt-1">—</p>
+          <p class="text-xs text-gray-500 mt-1">Badge holders</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase tracking-wider">Banned Users</p>
+          <p id="statBanned" class="text-3xl font-bold text-orange-400 mt-1">—</p>
+          <p class="text-xs text-gray-500 mt-1">Restricted accounts</p>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase tracking-wider">New Today</p>
+          <p id="statToday" class="text-3xl font-bold text-cyan-400 mt-1">—</p>
+          <p class="text-xs text-gray-500 mt-1">Users joined today</p>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
+        <h3 class="font-semibold text-white mb-4">Quick Actions</h3>
+        <div class="flex flex-wrap gap-3">
+          <button onclick="exportUsersCSV()" class="flex items-center gap-2 bg-indigo-900 hover:bg-indigo-800 text-indigo-200 text-sm px-4 py-2 rounded-lg transition">
+            📥 Export Users CSV
+          </button>
+          <button onclick="exportPostsCSV()" class="flex items-center gap-2 bg-blue-900 hover:bg-blue-800 text-blue-200 text-sm px-4 py-2 rounded-lg transition">
+            📥 Export Posts CSV
+          </button>
+          <button onclick="showBroadcastModal()" class="flex items-center gap-2 bg-green-900 hover:bg-green-800 text-green-200 text-sm px-4 py-2 rounded-lg transition">
+            📢 Broadcast Announcement
+          </button>
+          <button onclick="clearDismissedReports()" class="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-sm px-4 py-2 rounded-lg transition">
+            🗑️ Clear Dismissed Reports
+          </button>
+          <button onclick="showTab('reports')" class="flex items-center gap-2 bg-red-900 hover:bg-red-800 text-red-200 text-sm px-4 py-2 rounded-lg transition">
+            🚩 View Open Reports
+          </button>
+        </div>
+      </div>
+
+      <!-- Growth Chart -->
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-white">Growth — Last 7 Days</h3>
+          <div class="flex gap-2">
+            <span class="text-xs text-indigo-400">■ Users</span>
+            <span class="text-xs text-blue-400 ml-2">■ Posts</span>
+          </div>
+        </div>
+        <canvas id="growthChart" height="80"></canvas>
+      </div>
+
+      <!-- Top Posts + Top Users side by side -->
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <!-- Top Posts -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-white">🔥 Top Posts by Likes</h3>
+            <button onclick="showTab('posts')" class="text-indigo-400 text-xs hover:underline">View all →</button>
+          </div>
+          <div id="topPostsList" class="space-y-3"></div>
+        </div>
+        <!-- Top Users -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-white">👑 Top Users by Followers</h3>
+            <button onclick="showTab('users')" class="text-indigo-400 text-xs hover:underline">View all →</button>
+          </div>
+          <div id="topUsersList" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- Recent Users -->
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-white">Recently Joined Users</h3>
+          <button onclick="showTab('users')" class="text-indigo-400 text-sm hover:underline">View all →</button>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr class="text-gray-500 text-xs uppercase border-b border-gray-800">
+            <th class="text-left py-2 pr-4">User</th>
+            <th class="text-left py-2 pr-4">Email / Phone</th>
+            <th class="text-left py-2 pr-4">Joined</th>
+            <th class="text-left py-2">Status</th>
+          </tr></thead>
+          <tbody id="recentUsersBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Recent Posts -->
+      <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-white">Recent Posts</h3>
+          <button onclick="showTab('posts')" class="text-indigo-400 text-sm hover:underline">View all →</button>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr class="text-gray-500 text-xs uppercase border-b border-gray-800">
+            <th class="text-left py-2 pr-4">Author</th>
+            <th class="text-left py-2 pr-4">Caption</th>
+            <th class="text-left py-2 pr-4">Likes</th>
+            <th class="text-left py-2">Posted</th>
+          </tr></thead>
+          <tbody id="recentPostsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── USERS ── -->
+    <div id="tab-users" class="tab-content p-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-white">Users</h2>
+        <div class="flex gap-3">
+          <input id="userSearch" type="text" placeholder="Search by name or email…"
+            oninput="filterUsers()"
+            class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 w-64" />
+          <select id="userFilter" onchange="filterUsers()"
+            class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none">
+            <option value="all">All users</option>
+            <option value="verified">Verified</option>
+            <option value="banned">Banned</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
+      </div>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead><tr class="text-gray-500 text-xs uppercase border-b border-gray-800 bg-gray-950">
+            <th class="text-left px-4 py-3">User</th>
+            <th class="text-left px-4 py-3">Contact</th>
+            <th class="text-left px-4 py-3">Posts</th>
+            <th class="text-left px-4 py-3">Followers</th>
+            <th class="text-left px-4 py-3">Joined</th>
+            <th class="text-left px-4 py-3">Status</th>
+            <th class="text-left px-4 py-3">Actions</th>
+          </tr></thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+        <div id="usersEmpty" class="hidden text-center text-gray-500 py-12">No users found</div>
+        <div id="usersLoading" class="text-center text-gray-500 py-12">Loading users…</div>
+      </div>
+    </div>
+
+    <!-- ── POSTS ── -->
+    <div id="tab-posts" class="tab-content p-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-white">Posts</h2>
+        <input id="postSearch" type="text" placeholder="Search by caption or author…"
+          oninput="filterPosts()"
+          class="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 w-64" />
+      </div>
+      <div class="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead><tr class="text-gray-500 text-xs uppercase border-b border-gray-800 bg-gray-950">
+            <th class="text-left px-4 py-3">Image</th>
+            <th class="text-left px-4 py-3">Author</th>
+            <th class="text-left px-4 py-3">Caption</th>
+            <th class="text-left px-4 py-3">Likes</th>
+            <th class="text-left px-4 py-3">Comments</th>
+            <th class="text-left px-4 py-3">Posted</th>
+            <th class="text-left px-4 py-3">Actions</th>
+          </tr></thead>
+          <tbody id="postsTableBody"></tbody>
+        </table>
+        <div id="postsEmpty" class="hidden text-center text-gray-500 py-12">No posts found</div>
+        <div id="postsLoading" class="text-center text-gray-500 py-12">Loading posts…</div>
+      </div>
+    </div>
+
+    <!-- ── REPORTS ── -->
+    <div id="tab-reports" class="tab-content p-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-white">Reports</h2>
+        <span id="reportsCount" class="bg-red-900 text-red-200 text-xs px-3 py-1 rounded-full"></span>
+      </div>
+      <div id="reportsContainer" class="space-y-4"></div>
+      <div id="reportsEmpty" class="hidden bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-500 py-16">
+        ✅ No open reports
+      </div>
+      <div id="reportsLoading" class="text-center text-gray-500 py-12">Loading reports…</div>
+    </div>
+
+    <!-- ── ANALYTICS ── -->
+    <div id="tab-analytics" class="tab-content p-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-white">📊 Analytics</h2>
+        <div class="flex gap-2">
+          <select id="analyticsRange" onchange="loadAnalytics()" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+          <button onclick="loadAnalytics()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm">🔄 Refresh</button>
+        </div>
+      </div>
+
+      <!-- Engagement Stats -->
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="stat-card rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase">Daily Active Users</p>
+          <p id="analyticsDAU" class="text-2xl font-bold text-white mt-1">—</p>
+          <p class="text-xs text-gray-500 mt-1">Avg last 7 days</p>
+        </div>
+        <div class="stat-card rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase">Posts Per Day</p>
+          <p id="analyticsPPD" class="text-2xl font-bold text-blue-400 mt-1">—</p>
+          <p class="text-xs text-gray-500 mt-1">Avg last 7 days</p>
+        </div>
+        <div class="stat-card rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase">Total Interactions</p>
+          <p id="analyticsInteractions" class="text-2xl font-bold text-green-400 mt-1">—</p>
+          <p class="text-xs text-gray-500 mt-1">Likes + Comments</p>
+        </div>
+        <div class="stat-card rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase">User Retention</p>
+          <p id="analyticsRetention" class="text-2xl font-bold text-purple-400 mt-1">—</p>
+          <p class="text-xs text-gray-500 mt-1">7-day retention</p>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div class="glass-card rounded-xl p-6">
+          <h3 class="font-semibold text-white mb-4">User Growth Trend</h3>
+          <canvas id="userGrowthChart" height="120"></canvas>
+        </div>
+        <div class="glass-card rounded-xl p-6">
+          <h3 class="font-semibold text-white mb-4">Post Activity</h3>
+          <canvas id="postActivityChart" height="120"></canvas>
+        </div>
+      </div>
+
+      <!-- Engagement Heatmap -->
+      <div class="glass-card rounded-xl p-6 mb-6">
+        <h3 class="font-semibold text-white mb-4">⏰ Activity Heatmap (Last 30 Days)</h3>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-xs text-gray-400">Less</span>
+          <div class="flex gap-1">
+            <div class="heatmap-cell bg-gray-800"></div>
+            <div class="heatmap-cell bg-indigo-900"></div>
+            <div class="heatmap-cell bg-indigo-700"></div>
+            <div class="heatmap-cell bg-indigo-500"></div>
+            <div class="heatmap-cell bg-indigo-400"></div>
+          </div>
+          <span class="text-xs text-gray-400">More</span>
+        </div>
+        <div id="activityHeatmap" class="grid grid-cols-7 gap-1"></div>
+        <div class="flex justify-between text-xs text-gray-500 mt-2">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+      </div>
+
+      <!-- Top Performing Content -->
+      <div class="grid grid-cols-2 gap-6">
+        <div class="glass-card rounded-xl p-6">
+          <h3 class="font-semibold text-white mb-4">🏆 Most Engaged Posts</h3>
+          <div id="mostEngagedPosts" class="space-y-3"></div>
+        </div>
+        <div class="glass-card rounded-xl p-6">
+          <h3 class="font-semibold text-white mb-4">📈 Fastest Growing Users</h3>
+          <div id="fastestGrowingUsers" class="space-y-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ANNOUNCEMENTS ── -->
+    <div id="tab-announcements" class="tab-content p-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-white">📢 Announcements</h2>
+        <button onclick="showBroadcastModal()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium">
+          + New Announcement
+        </button>
+      </div>
+      <div id="announcementsList" class="space-y-4"></div>
+      <div id="announcementsEmpty" class="hidden bg-gray-900 border border-gray-800 rounded-xl text-center text-gray-500 py-16">
+        No announcements yet
+      </div>
+    </div>
+
+    <!-- ── SECURITY ── -->
+    <div id="tab-security" class="tab-content p-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-white">🛡️ Security Center</h2>
+        <button onclick="loadSecurityData()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm">🔄 Refresh</button>
+      </div>
+
+      <!-- Security Stats -->
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="stat-card rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase">Failed Logins (24h)</p>
+          <p id="failedLogins" class="text-2xl font-bold text-red-400 mt-1">—</p>
+        </div>
+        <div class="stat-card rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase">Suspicious IPs</p>
+          <p id="suspiciousIPs" class="text-2xl font-bold text-orange-400 mt-1">—</p>
+        </div>
+        <div class="stat-card rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase">Banned Accounts</p>
+          <p id="securityBannedCount" class="text-2xl font-bold text-yellow-400 mt-1">—</p>
+        </div>
+        <div class="stat-card rounded-xl p-5">
+          <p class="text-gray-400 text-xs uppercase">Admin Actions (24h)</p>
+          <p id="adminActions" class="text-2xl font-bold text-blue-400 mt-1">—</p>
+        </div>
+      </div>
+
+      <!-- Security Panels -->
+      <div class="grid grid-cols-2 gap-6">
+        <!-- Login Activity Log -->
+        <div class="glass-card rounded-xl p-6">
+          <h3 class="font-semibold text-white mb-4">🔐 Recent Login Activity</h3>
+          <div id="loginActivityLog" class="space-y-2 max-h-80 overflow-y-auto"></div>
+        </div>
+
+        <!-- Suspicious Activity -->
+        <div class="glass-card rounded-xl p-6">
+          <h3 class="font-semibold text-white mb-4">⚠️ Suspicious Activity</h3>
+          <div id="suspiciousActivity" class="space-y-2 max-h-80 overflow-y-auto"></div>
+        </div>
+      </div>
+
+      <!-- Admin Audit Log -->
+      <div class="glass-card rounded-xl p-6 mt-6">
+        <h3 class="font-semibold text-white mb-4">📝 Admin Audit Log</h3>
+        <div id="adminAuditLog" class="space-y-2 max-h-60 overflow-y-auto"></div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div id="tab-settings" class="tab-content p-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-white">⚙️ System Settings</h2>
+        <button onclick="saveSettings()" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-lg text-sm font-medium">
+          💾 Save Changes
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-6">
+        <!-- App Configuration -->
+        <div class="glass-card rounded-xl p-6">
+          <h3 class="font-semibold text-white mb-4">🚀 App Configuration</h3>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-white text-sm font-medium">Maintenance Mode</p>
+                <p class="text-gray-400 text-xs">Disable app access for all users</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="settingMaintenance" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-white text-sm font-medium">New User Registration</p>
+                <p class="text-gray-400 text-xs">Allow new sign-ups</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="settingRegistration" class="sr-only peer" checked>
+                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-white text-sm font-medium">Post Uploads</p>
+                <p class="text-gray-400 text-xs">Allow users to create posts</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="settingUploads" class="sr-only peer" checked>
+                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Flags -->
+        <div class="glass-card rounded-xl p-6">
+          <h3 class="font-semibold text-white mb-4">🚩 Feature Flags</h3>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-white text-sm font-medium">Stories Feature</p>
+                <p class="text-gray-400 text-xs">Enable stories functionality</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="settingStories" class="sr-only peer" checked>
+                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-white text-sm font-medium">Comments</p>
+                <p class="text-gray-400 text-xs">Enable post comments</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="settingComments" class="sr-only peer" checked>
+                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-white text-sm font-medium">Verification Badges</p>
+                <p class="text-gray-400 text-xs">Show verified badges</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="settingVerification" class="sr-only peer" checked>
+                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-white text-sm font-medium">AI Content Moderation</p>
+                <p class="text-gray-400 text-xs">Auto-detect inappropriate content</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="settingAIModeration" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content Moderation -->
+        <div class="glass-card rounded-xl p-6">
+          <h3 class="font-semibold text-white mb-4">🛡️ Content Moderation</h3>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-white text-sm font-medium">Auto-Flag Suspicious Posts</p>
+                <p class="text-gray-400 text-xs">Flag posts with many reports</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="settingAutoFlag" class="sr-only peer" checked>
+                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-white text-sm font-medium">Require Approval for New Users</p>
+                <p class="text-gray-400 text-xs">Manually approve new accounts</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="settingRequireApproval" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-600"></div>
+              </label>
+            </div>
+            <div>
+              <p class="text-white text-sm font-medium mb-2">Report Threshold</p>
+              <input type="range" id="settingReportThreshold" min="1" max="10" value="3" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+              <div class="flex justify-between text-xs text-gray-400 mt-1">
+                <span>1 report</span>
+                <span id="reportThresholdValue">3 reports</span>
+                <span>10 reports</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Limits & Quotas -->
+        <div class="glass-card rounded-xl p-6">
+          <h3 class="font-semibold text-white mb-4">📊 Limits & Quotas</h3>
+          <div class="space-y-4">
+            <div>
+              <p class="text-white text-sm font-medium mb-2">Max Posts Per Day</p>
+              <input type="number" id="settingMaxPosts" value="10" min="1" max="100" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+            </div>
+            <div>
+              <p class="text-white text-sm font-medium mb-2">Max Image Size (MB)</p>
+              <input type="number" id="settingMaxImageSize" value="10" min="1" max="50" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+            </div>
+            <div>
+              <p class="text-white text-sm font-medium mb-2">Caption Max Length</p>
+              <input type="number" id="settingCaptionLength" value="500" min="100" max="2000" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ════════ CONFIRM MODAL ════════ -->
+<div id="confirmModal" class="modal">
+  <div class="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-md w-full mx-4">
+    <h3 id="confirmTitle" class="text-lg font-bold text-white mb-2"></h3>
+    <p id="confirmMsg" class="text-gray-400 text-sm mb-6"></p>
+    <div class="flex gap-3 justify-end">
+      <button onclick="closeModal()" class="px-5 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-white">Cancel</button>
+      <button id="confirmBtn" class="px-5 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-semibold text-white">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ POST PREVIEW MODAL ════════ -->
+<div id="postModal" class="modal">
+  <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-lg w-full mx-4">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-bold text-white">Post Details</h3>
+      <button onclick="closePostModal()" class="text-gray-400 hover:text-white text-xl">✕</button>
+    </div>
+    <img id="postModalImg" src="" class="w-full rounded-xl object-cover max-h-80 mb-4" />
+    <p id="postModalCaption" class="text-gray-300 text-sm mb-2"></p>
+    <p id="postModalMeta" class="text-gray-500 text-xs"></p>
+  </div>
+</div>
+
+<!-- ════════ BROADCAST MODAL ════════ -->
+<div id="broadcastModal" class="modal">
+  <div class="bg-gray-900 border border-gray-700 rounded-2xl p-8 max-w-lg w-full mx-4">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-lg font-bold text-white">📢 Broadcast Announcement</h3>
+      <button onclick="closeBroadcastModal()" class="text-gray-400 hover:text-white text-xl">✕</button>
+    </div>
+    <p class="text-gray-400 text-sm mb-4">This will save an announcement to Firestore. Your app can read it and show it to all users.</p>
+    <div class="space-y-4">
+      <div>
+        <label class="text-xs text-gray-400 uppercase tracking-wider">Title</label>
+        <input id="broadcastTitle" type="text" placeholder="e.g. New feature launched!"
+          class="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 text-sm" />
+      </div>
+      <div>
+        <label class="text-xs text-gray-400 uppercase tracking-wider">Message</label>
+        <textarea id="broadcastBody" rows="4" placeholder="Write your announcement here…"
+          class="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 text-sm resize-none"></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3 justify-end mt-6">
+      <button onclick="closeBroadcastModal()" class="px-5 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-white">Cancel</button>
+      <button onclick="sendBroadcast()" class="px-5 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-semibold text-white">Send Broadcast</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ USER DETAIL MODAL ════════ -->
+<div id="userDetailModal" class="modal">
+  <div class="bg-gray-900 border border-gray-700 rounded-2xl p-0 max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+    <!-- Header -->
+    <div class="flex justify-between items-center p-6 border-b border-gray-800">
+      <div class="flex items-center gap-4">
+        <img id="userDetailAvatar" src="" class="w-16 h-16 rounded-full object-cover border-2 border-indigo-500">
+        <div>
+          <h3 id="userDetailName" class="text-xl font-bold text-white"></h3>
+          <p id="userDetailHandle" class="text-gray-400 text-sm"></p>
+        </div>
+      </div>
+      <button onclick="closeUserDetailModal()" class="text-gray-400 hover:text-white text-xl">✕</button>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-6">
+      <!-- Stats Row -->
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="stat-card rounded-xl p-4 text-center">
+          <p class="text-2xl font-bold text-white" id="userDetailPosts">—</p>
+          <p class="text-gray-400 text-xs uppercase">Posts</p>
+        </div>
+        <div class="stat-card rounded-xl p-4 text-center">
+          <p class="text-2xl font-bold text-indigo-400" id="userDetailFollowers">—</p>
+          <p class="text-gray-400 text-xs uppercase">Followers</p>
+        </div>
+        <div class="stat-card rounded-xl p-4 text-center">
+          <p class="text-2xl font-bold text-blue-400" id="userDetailFollowing">—</p>
+          <p class="text-gray-400 text-xs uppercase">Following</p>
+        </div>
+        <div class="stat-card rounded-xl p-4 text-center">
+          <p class="text-2xl font-bold text-green-400" id="userDetailJoined">—</p>
+          <p class="text-gray-400 text-xs uppercase">Joined</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-6">
+        <!-- Profile Info -->
+        <div class="glass-card rounded-xl p-5">
+          <h4 class="font-semibold text-white mb-4">📋 Profile Information</h4>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-400">Email:</span>
+              <span id="userDetailEmail" class="text-white">—</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Phone:</span>
+              <span id="userDetailPhone" class="text-white">—</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Bio:</span>
+              <span id="userDetailBio" class="text-white text-right max-w-xs truncate">—</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Verified:</span>
+              <span id="userDetailVerified" class="text-white">—</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Private Account:</span>
+              <span id="userDetailPrivate" class="text-white">—</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Status:</span>
+              <span id="userDetailStatus" class="text-white">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Posts -->
+        <div class="glass-card rounded-xl p-5">
+          <h4 class="font-semibold text-white mb-4">🖼️ Recent Posts</h4>
+          <div id="userDetailPostsList" class="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto"></div>
+        </div>
+
+        <!-- Followers List -->
+        <div class="glass-card rounded-xl p-5 col-span-2">
+          <h4 class="font-semibold text-white mb-4">👥 Recent Followers</h4>
+          <div id="userDetailFollowersList" class="flex flex-wrap gap-2 max-h-32 overflow-y-auto"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <div class="p-4 border-t border-gray-800 flex gap-3 justify-end bg-gray-950">
+      <button onclick="toggleUserVerification()" id="userDetailVerifyBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm text-white">✓ Toggle Verification</button>
+      <button onclick="toggleUserBanFromModal()" id="userDetailBanBtn" class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-sm text-white">🚫 Ban User</button>
+      <button onclick="closeUserDetailModal()" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm text-white">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ COMMENTS MODAL ════════ -->
+<div id="commentsModal" class="modal">
+  <div class="bg-gray-900 border border-gray-700 rounded-2xl p-0 max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col">
+    <div class="flex justify-between items-center p-4 border-b border-gray-800">
+      <h3 class="text-lg font-bold text-white">💬 Post Comments</h3>
+      <button onclick="closeCommentsModal()" class="text-gray-400 hover:text-white text-xl">✕</button>
+    </div>
+    <div id="commentsList" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+    <div id="commentsEmpty" class="hidden text-center text-gray-500 py-8">No comments on this post</div>
+  </div>
+</div>
+
+<!-- ════════ TOAST ════════ -->
+<div id="toast" class="fixed bottom-6 right-6 hidden bg-indigo-700 text-white text-sm px-5 py-3 rounded-xl shadow-xl z-50 transition"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────
+// FIREBASE INIT
+// ─────────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey:            "AIzaSyB72KxNCbgSNHMOm-zaLuCkT1e6GOsidJI",
+  authDomain:        "pictogram-af7c8.firebaseapp.com",
+  projectId:         "pictogram-af7c8",
+  storageBucket:     "pictogram-af7c8.firebasestorage.app",
+  messagingSenderId: "793414644362"
+};
+
+try { firebase.initializeApp(firebaseConfig); } catch(e) { console.error('Firebase init error:', e); }
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// ─────────────────────────────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────────────────────────────
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    const doc = await db.collection('users').doc(user.uid).get();
+    if (doc.exists && doc.data().isAdmin === true) {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('consolePage').classList.remove('hidden');
+      document.getElementById('adminInfo').textContent = user.email || user.displayName || 'Admin';
+      loadDashboard();
+      loadUsers();
+      loadPosts();
+      loadReports();
+    } else {
+      await auth.signOut();
+      showLoginError('Access denied: your account does not have admin privileges.');
+    }
+  } else {
+    document.getElementById('loginPage').classList.remove('hidden');
+    document.getElementById('consolePage').classList.add('hidden');
+  }
+});
+
+async function login() {
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn      = document.getElementById('loginBtn');
+  if (!email || !password) { showLoginError('Please enter email and password.'); return; }
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch(e) {
+    const codes = {
+      'auth/user-not-found':   '❌ No account found with this email.',
+      'auth/wrong-password':   '❌ Wrong password.',
+      'auth/invalid-email':    '❌ Invalid email address.',
+      'auth/too-many-requests':'❌ Too many attempts. Try again later.',
+      'auth/invalid-credential': '❌ Wrong email or password.',
+      'auth/network-request-failed': '❌ Network error — check your internet.',
+    };
+    showLoginError(codes[e.code] || ('❌ ' + e.message));
+    btn.textContent = 'Sign In as Admin'; btn.disabled = false;
+  }
+}
+
+function logout() { auth.signOut(); }
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg; el.classList.remove('hidden');
+}
+
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') login();
+});
+
+// ─────────────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────────────
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('nav-' + tab).classList.add('active');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// DASHBOARD
+// ─────────────────────────────────────────────────────────────────
+let growthChartInstance = null;
+
+async function loadDashboard() {
+  const [usersSnap, postsSnap, reportsSnap] = await Promise.all([
+    db.collection('users').get(),
+    db.collection('posts').get(),
+    db.collection('reports').where('status', '==', 'open').get().catch(() => ({ docs:[], size:0 })),
+  ]);
+
+  const users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const posts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // ── Stat Cards ──
+  const today = new Date(); today.setHours(0,0,0,0);
+  const sevenDaysAgo = Date.now() - 7 * 24 * 3600 * 1000;
+  const todayUsers  = users.filter(u => (u.createdAt?.toDate?.()?.getTime()||0) >= today.getTime()).length;
+  const newUsers    = users.filter(u => (u.createdAt?.toDate?.()?.getTime()||0) > sevenDaysAgo).length;
+  const newPosts    = posts.filter(p => (p.createdAt?.toDate?.()?.getTime()||0) > sevenDaysAgo).length;
+
+  document.getElementById('statUsers').textContent    = users.length;
+  document.getElementById('statPosts').textContent    = posts.length;
+  document.getElementById('statReports').textContent  = reportsSnap.size || 0;
+  document.getElementById('statVerified').textContent = users.filter(u => u.verificationBadge).length;
+  document.getElementById('statBanned').textContent   = users.filter(u => u.isBanned).length;
+  document.getElementById('statToday').textContent    = todayUsers;
+  if (newUsers) document.getElementById('statUsersNew').textContent = `+${newUsers} this week`;
+  if (newPosts) document.getElementById('statPostsNew').textContent = `+${newPosts} this week`;
+
+  // ── Growth Chart (last 7 days) ──
+  const labels = [];
+  const usersByDay = [];
+  const postsByDay = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - i);
+    const next = new Date(d); next.setDate(next.getDate() + 1);
+    labels.push(d.toLocaleDateString('en-IN', { weekday:'short', day:'numeric' }));
+    usersByDay.push(users.filter(u => {
+      const t = u.createdAt?.toDate?.()?.getTime()||0;
+      return t >= d.getTime() && t < next.getTime();
+    }).length);
+    postsByDay.push(posts.filter(p => {
+      const t = p.createdAt?.toDate?.()?.getTime()||0;
+      return t >= d.getTime() && t < next.getTime();
+    }).length);
+  }
+  if (growthChartInstance) growthChartInstance.destroy();
+  const ctx = document.getElementById('growthChart').getContext('2d');
+  growthChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'New Users', data: usersByDay, backgroundColor: 'rgba(99,102,241,0.7)', borderRadius: 6 },
+        { label: 'New Posts', data: postsByDay, backgroundColor: 'rgba(59,130,246,0.7)', borderRadius: 6 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#9ca3af', font:{size:12} } } },
+      scales: {
+        x: { ticks:{ color:'#6b7280' }, grid:{ color:'#1f2937' } },
+        y: { ticks:{ color:'#6b7280', stepSize:1 }, grid:{ color:'#1f2937' }, beginAtZero:true }
+      }
+    }
+  });
+
+  // ── Top Posts by likes ──
+  const topPosts = [...posts].sort((a,b) => (b.likesCount||0) - (a.likesCount||0)).slice(0,5);
+  document.getElementById('topPostsList').innerHTML = topPosts.length
+    ? topPosts.map((p,i) => `
+      <div class="flex items-center gap-3">
+        <span class="text-gray-500 text-xs w-4">${i+1}</span>
+        ${p.imageUrl ? `<img src="${p.imageUrl}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" />` : '<div class="w-10 h-10 rounded-lg bg-gray-700 flex-shrink-0"></div>'}
+        <div class="flex-1 min-w-0">
+          <p class="text-white text-sm truncate">${esc(p.caption||'(no caption)')}</p>
+          <p class="text-gray-500 text-xs">${esc(p.authorName||p.userId||'—')}</p>
+        </div>
+        <span class="text-pink-400 text-sm font-semibold">♥ ${p.likesCount||0}</span>
+      </div>`).join('')
+    : '<p class="text-gray-500 text-sm">No posts yet</p>';
+
+  // ── Top Users by followers ──
+  const topUsers = [...users].sort((a,b) => (b.supportersCount||0) - (a.supportersCount||0)).slice(0,5);
+  document.getElementById('topUsersList').innerHTML = topUsers.length
+    ? topUsers.map((u,i) => `
+      <div class="flex items-center gap-3">
+        <span class="text-gray-500 text-xs w-4">${i+1}</span>
+        <img src="${u.profileImage||'https://ui-avatars.com/api/?name='+encodeURIComponent(u.displayName||'?')+'&background=4f46e5&color=fff&size=32'}"
+          class="w-8 h-8 rounded-full object-cover flex-shrink-0"
+          onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName||'?')}&background=4f46e5&color=fff&size=32'" />
+        <div class="flex-1 min-w-0">
+          <p class="text-white text-sm truncate">${esc(u.displayName||'—')}${u.verificationBadge?'<span class="text-purple-400 ml-1">✓</span>':''}</p>
+          <p class="text-gray-500 text-xs">${u.postsCount||0} posts</p>
+        </div>
+        <span class="text-indigo-400 text-sm font-semibold">${u.supportersCount||0} followers</span>
+      </div>`).join('')
+    : '<p class="text-gray-500 text-sm">No users yet</p>';
+
+  // ── Recent Users ──
+  const recent = [...users].sort((a,b) => (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,5);
+  document.getElementById('recentUsersBody').innerHTML = recent.map(u => `
+    <tr class="border-b border-gray-800">
+      <td class="py-2 pr-4 font-medium text-white">${esc(u.displayName||'—')}</td>
+      <td class="py-2 pr-4 text-gray-400">${esc(u.email||u.phoneNumber||'—')}</td>
+      <td class="py-2 pr-4 text-gray-400">${formatDate(u.createdAt)}</td>
+      <td class="py-2">${u.isBanned ? badge('Banned','red') : badge('Active','green')}</td>
+    </tr>`).join('');
+
+  // ── Recent Posts ──
+  const recentP = [...posts].sort((a,b) => (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,5);
+  document.getElementById('recentPostsBody').innerHTML = recentP.map(p => `
+    <tr class="border-b border-gray-800">
+      <td class="py-2 pr-4 font-medium text-white">${esc(p.authorName||p.userId||'—')}</td>
+      <td class="py-2 pr-4 text-gray-400 max-w-xs truncate">${esc(p.caption||'—')}</td>
+      <td class="py-2 pr-4 text-gray-400">${p.likesCount||0}</td>
+      <td class="py-2 text-gray-400">${formatDate(p.createdAt)}</td>
+    </tr>`).join('');
+
+  // ── Reports badge ──
+  if ((reportsSnap.size||0) > 0) {
+    document.getElementById('reportsBadge').textContent = reportsSnap.size;
+    document.getElementById('reportsBadge').classList.remove('hidden');
+    document.getElementById('reportsCount').textContent = reportsSnap.size + ' open';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// QUICK ACTIONS
+// ─────────────────────────────────────────────────────────────────
+function exportCSV(rows, filename) {
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = filename; a.click();
+}
+
+async function exportUsersCSV() {
+  showToast('Preparing users export…');
+  const snap = await db.collection('users').get();
+  const rows = [['UID','Display Name','Email','Phone','Posts','Followers','Verified','Banned','Joined']];
+  snap.docs.forEach(d => {
+    const u = d.data();
+    rows.push([d.id, u.displayName||'', u.email||'', u.phoneNumber||'',
+      u.postsCount||0, u.supportersCount||0,
+      u.verificationBadge?'Yes':'No', u.isBanned?'Yes':'No', formatDate(u.createdAt)]);
+  });
+  exportCSV(rows, 'pictogram_users.csv');
+  showToast(`Exported ${snap.size} users`);
+}
+
+async function exportPostsCSV() {
+  showToast('Preparing posts export…');
+  const snap = await db.collection('posts').get();
+  const rows = [['Post ID','Author','Caption','Likes','Comments','Posted']];
+  snap.docs.forEach(d => {
+    const p = d.data();
+    rows.push([d.id, p.authorName||p.userId||'', p.caption||'',
+      p.likesCount||0, p.commentsCount||0, formatDate(p.createdAt)]);
+  });
+  exportCSV(rows, 'pictogram_posts.csv');
+  showToast(`Exported ${snap.size} posts`);
+}
+
+async function clearDismissedReports() {
+  openModal('Clear Dismissed Reports', 'Delete all dismissed/actioned reports from Firestore?', async () => {
+    const snap = await db.collection('reports')
+      .where('status', 'in', ['dismissed','actioned']).get().catch(() => ({ docs:[] }));
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.delete(d.ref));
+    await batch.commit();
+    showToast(`Cleared ${snap.docs.length} resolved reports`);
+    loadReports();
+  });
+}
+
+// Broadcast Modal
+function showBroadcastModal() {
+  document.getElementById('broadcastModal').classList.add('open');
+}
+function closeBroadcastModal() {
+  document.getElementById('broadcastModal').classList.remove('open');
+  document.getElementById('broadcastTitle').value = '';
+  document.getElementById('broadcastBody').value  = '';
+}
+async function sendBroadcast() {
+  const title = document.getElementById('broadcastTitle').value.trim();
+  const body  = document.getElementById('broadcastBody').value.trim();
+  if (!title || !body) { showToast('Fill in both title and message', 'red'); return; }
+  await db.collection('announcements').add({
+    title, body,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    createdBy: auth.currentUser?.email || 'admin',
+  });
+  closeBroadcastModal();
+  showToast('Announcement broadcast saved ✓');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────────────────────────────
+let allUsers = [];
+async function loadUsers() {
+  document.getElementById('usersLoading').classList.remove('hidden');
+  const snap = await db.collection('users').orderBy('createdAt', 'desc').get();
+  allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  document.getElementById('usersLoading').classList.add('hidden');
+  renderUsers(allUsers);
+}
+
+function filterUsers() {
+  const q = document.getElementById('userSearch').value.toLowerCase();
+  const f = document.getElementById('userFilter').value;
+  let filtered = allUsers.filter(u => {
+    const text = ((u.displayName||'') + (u.email||'') + (u.phoneNumber||'')).toLowerCase();
+    return text.includes(q);
+  });
+  if (f === 'verified') filtered = filtered.filter(u => u.verificationBadge);
+  if (f === 'banned')   filtered = filtered.filter(u => u.isBanned);
+  if (f === 'private')  filtered = filtered.filter(u => u.isPrivate);
+  renderUsers(filtered);
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById('usersTableBody');
+  const empty = document.getElementById('usersEmpty');
+  if (!users.length) { tbody.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  tbody.innerHTML = users.map(u => `
+    <tr class="border-b border-gray-800">
+      <td class="px-4 py-3">
+        <div class="flex items-center gap-3">
+          <img src="${u.profileImage||'https://ui-avatars.com/api/?name='+encodeURIComponent(u.displayName||'?')+'&background=4f46e5&color=fff&size=32'}"
+            class="w-8 h-8 rounded-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName||'?')}&background=4f46e5&color=fff&size=32'" />
+          <div>
+            <p class="font-medium text-white text-sm">${esc(u.displayName||'—')}${u.verificationBadge?'<span class="ml-1 text-purple-400">✓</span>':''}</p>
+            <p class="text-gray-500 text-xs">ID: ${u.id.slice(0,8)}…</p>
+          </div>
+        </div>
+      </td>
+      <td class="px-4 py-3 text-gray-400 text-sm">${esc(u.email||u.phoneNumber||'—')}</td>
+      <td class="px-4 py-3 text-gray-400 text-sm">${u.postsCount||0}</td>
+      <td class="px-4 py-3 text-gray-400 text-sm">${u.supportersCount||0}</td>
+      <td class="px-4 py-3 text-gray-400 text-sm">${formatDate(u.createdAt)}</td>
+      <td class="px-4 py-3">
+        ${u.isBanned ? badge('Banned','red') : badge('Active','green')}
+        ${u.isPrivate ? ' '+badge('Private','yellow') : ''}
+        ${u.verificationBadge ? ' '+badge('Verified','purple') : ''}
+      </td>
+      <td class="px-4 py-3">
+        <div class="flex gap-2 flex-wrap">
+          <button onclick="toggleBan('${u.id}', ${!!u.isBanned})"
+            class="text-xs px-2.5 py-1 rounded-lg ${u.isBanned ? 'bg-green-900 text-green-200 hover:bg-green-800' : 'bg-red-900 text-red-200 hover:bg-red-800'} transition">
+            ${u.isBanned ? 'Unban' : 'Ban'}
+          </button>
+          <button onclick="toggleVerify('${u.id}', ${!!u.verificationBadge})"
+            class="text-xs px-2.5 py-1 rounded-lg bg-purple-900 text-purple-200 hover:bg-purple-800 transition">
+            ${u.verificationBadge ? 'Unverify' : 'Verify'}
+          </button>
+          <button onclick="confirmDeleteUser('${u.id}', '${esc(u.displayName||'this user')}')"
+            class="text-xs px-2.5 py-1 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition">
+            Delete
+          </button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function toggleBan(uid, isBanned) {
+  await db.collection('users').doc(uid).update({ isBanned: !isBanned });
+  showToast(isBanned ? 'User unbanned' : 'User banned');
+  loadUsers(); loadDashboard();
+}
+
+async function toggleVerify(uid, hasVerify) {
+  await db.collection('users').doc(uid).update({ verificationBadge: !hasVerify });
+  showToast(hasVerify ? 'Verification badge removed' : 'Verification badge granted ✓');
+  loadUsers(); loadDashboard();
+}
+
+function confirmDeleteUser(uid, name) {
+  openModal('Delete User', `Are you sure you want to permanently delete ${name}? This cannot be undone.`, async () => {
+    await db.collection('users').doc(uid).delete();
+    showToast('User deleted');
+    loadUsers(); loadDashboard();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// POSTS
+// ─────────────────────────────────────────────────────────────────
+let allPosts = [];
+async function loadPosts() {
+  document.getElementById('postsLoading').classList.remove('hidden');
+  const snap = await db.collection('posts').orderBy('createdAt', 'desc').limit(100).get();
+  allPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  document.getElementById('postsLoading').classList.add('hidden');
+  renderPosts(allPosts);
+}
+
+function filterPosts() {
+  const q = document.getElementById('postSearch').value.toLowerCase();
+  const filtered = allPosts.filter(p =>
+    ((p.caption||'') + (p.authorName||'') + (p.userId||'')).toLowerCase().includes(q));
+  renderPosts(filtered);
+}
+
+function renderPosts(posts) {
+  const tbody = document.getElementById('postsTableBody');
+  const empty = document.getElementById('postsEmpty');
+  if (!posts.length) { tbody.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  tbody.innerHTML = posts.map(p => `
+    <tr class="border-b border-gray-800">
+      <td class="px-4 py-3">
+        ${p.imageUrl
+          ? `<img src="${p.imageUrl}" class="w-12 h-12 rounded-lg object-cover cursor-pointer hover:opacity-80"
+              onclick="openPostModal('${p.imageUrl}','${esc(p.caption||'')}','${esc(p.authorName||p.userId||'')}',${p.likesCount||0})" />`
+          : '<div class="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center text-gray-400">🖼</div>'}
+      </td>
+      <td class="px-4 py-3 text-gray-300 text-sm font-medium">${esc(p.authorName||p.userId||'—')}</td>
+      <td class="px-4 py-3 text-gray-400 text-sm max-w-xs">
+        <p class="truncate">${esc(p.caption||'—')}</p>
+      </td>
+      <td class="px-4 py-3 text-gray-400 text-sm">${p.likesCount||0}</td>
+      <td class="px-4 py-3 text-gray-400 text-sm">${p.commentsCount||0}</td>
+      <td class="px-4 py-3 text-gray-400 text-sm">${formatDate(p.createdAt)}</td>
+      <td class="px-4 py-3">
+        <button onclick="confirmDeletePost('${p.id}')"
+          class="text-xs px-2.5 py-1 rounded-lg bg-red-900 text-red-200 hover:bg-red-800 transition">
+          Delete
+        </button>
+      </td>
+    </tr>`).join('');
+}
+
+function confirmDeletePost(postId) {
+  openModal('Delete Post', 'Are you sure you want to permanently delete this post?', async () => {
+    await db.collection('posts').doc(postId).delete();
+    showToast('Post deleted');
+    loadPosts(); loadDashboard();
+  });
+}
+
+function openPostModal(url, caption, author, likes) {
+  document.getElementById('postModalImg').src = url;
+  document.getElementById('postModalCaption').textContent = caption || '(no caption)';
+  document.getElementById('postModalMeta').textContent = `By ${author} • ${likes} likes`;
+  document.getElementById('postModal').classList.add('open');
+}
+function closePostModal() { document.getElementById('postModal').classList.remove('open'); }
+
+// ─────────────────────────────────────────────────────────────────
+// REPORTS
+// ─────────────────────────────────────────────────────────────────
+async function loadReports() {
+  document.getElementById('reportsLoading').classList.remove('hidden');
+  let snap;
+  try {
+    snap = await db.collection('reports').where('status', '==', 'open').orderBy('createdAt', 'desc').get();
+  } catch(e) {
+    snap = { docs: [], size: 0 };
+  }
+  document.getElementById('reportsLoading').classList.add('hidden');
+  const reports = snap.docs?.map(d => ({ id: d.id, ...d.data() })) || [];
+
+  const container = document.getElementById('reportsContainer');
+  const empty     = document.getElementById('reportsEmpty');
+
+  if (!reports.length) { container.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  document.getElementById('reportsCount').textContent = reports.length + ' open';
+  document.getElementById('reportsBadge').textContent = reports.length;
+  document.getElementById('reportsBadge').classList.remove('hidden');
+
+  container.innerHTML = reports.map(r => `
+    <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="font-semibold text-white">${esc(r.reason||'No reason given')}</p>
+          <p class="text-gray-400 text-sm mt-1">Reported by: <span class="text-indigo-300">${esc(r.reporterName||r.reporterId||'Anonymous')}</span></p>
+          <p class="text-gray-400 text-sm">Content: <span class="text-yellow-300">${esc(r.contentType||'unknown')} — ${esc(r.contentId||'—')}</span></p>
+          <p class="text-gray-500 text-xs mt-2">${formatDate(r.createdAt)}</p>
+        </div>
+        <div class="flex gap-2 flex-shrink-0">
+          <button onclick="dismissReport('${r.id}')"
+            class="text-xs px-3 py-1.5 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition">
+            Dismiss
+          </button>
+          ${r.contentType === 'post' ? `
+          <button onclick="confirmDeleteReportedContent('${r.id}','${r.contentId||''}')"
+            class="text-xs px-3 py-1.5 rounded-lg bg-orange-900 text-orange-200 hover:bg-orange-800 transition">
+            Delete Content
+          </button>` : ''}
+          <button onclick="banReportedUser('${r.id}','${r.reportedUserId||''}')"
+            class="text-xs px-3 py-1.5 rounded-lg bg-red-900 text-red-200 hover:bg-red-800 transition">
+            Ban User
+          </button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function dismissReport(rid) {
+  await db.collection('reports').doc(rid).update({ status: 'dismissed' });
+  showToast('Report dismissed');
+  loadReports();
+}
+
+async function banReportedUser(rid, uid) {
+  if (!uid) { showToast('No user ID found in report', 'red'); return; }
+  await db.collection('users').doc(uid).update({ isBanned: true });
+  await db.collection('reports').doc(rid).update({ status: 'actioned' });
+  showToast('User banned and report resolved');
+  loadReports(); loadUsers();
+}
+
+function confirmDeleteReportedContent(rid, contentId) {
+  openModal('Delete Reported Content', 'Delete this post and resolve the report?', async () => {
+    if (contentId) await db.collection('posts').doc(contentId).delete();
+    await db.collection('reports').doc(rid).update({ status: 'actioned' });
+    showToast('Content deleted and report resolved');
+    loadReports(); loadPosts();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// MODAL
+// ─────────────────────────────────────────────────────────────────
+let confirmAction = null;
+function openModal(title, msg, action) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent   = msg;
+  confirmAction = action;
+  document.getElementById('confirmModal').classList.add('open');
+}
+function closeModal() { document.getElementById('confirmModal').classList.remove('open'); confirmAction = null; }
+document.getElementById('confirmBtn').onclick = () => { closeModal(); if (confirmAction) confirmAction(); };
+
+// ─────────────────────────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────────────────────────
+function showToast(msg, type='green') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `fixed bottom-6 right-6 text-white text-sm px-5 py-3 rounded-xl shadow-xl z-50 ${type==='red'?'bg-red-700':'bg-indigo-700'}`;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(ts) {
+  if (!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function badge(label, color) {
+  const map = { green:'badge-green', red:'badge-red', yellow:'badge-yellow', blue:'badge-blue', purple:'badge-purple' };
+  return `<span class="text-xs px-2 py-0.5 rounded-full font-medium ${map[color]||''}">${label}</span>`;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ANALYTICS
+// ─────────────────────────────────────────────────────────────────
+let userGrowthChartInstance = null;
+let postActivityChartInstance = null;
+
+async function loadAnalytics() {
+  const days = parseInt(document.getElementById('analyticsRange').value) || 30;
+  const cutoff = Date.now() - days * 24 * 3600 * 1000;
+
+  const [usersSnap, postsSnap] = await Promise.all([
+    db.collection('users').get(),
+    db.collection('posts').get()
+  ]);
+
+  const users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const posts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // Calculate DAU (active in last 7 days)
+  const sevenDaysAgo = Date.now() - 7 * 24 * 3600 * 1000;
+  const activeUsers = users.filter(u => {
+    const lastActive = u.lastActiveAt?.toDate?.()?.getTime() || u.createdAt?.toDate?.()?.getTime() || 0;
+    return lastActive > sevenDaysAgo;
+  }).length;
+  document.getElementById('analyticsDAU').textContent = activeUsers.toLocaleString();
+
+  // Posts per day
+  const recentPosts = posts.filter(p => (p.createdAt?.toDate?.()?.getTime()||0) > sevenDaysAgo);
+  const ppd = Math.round(recentPosts.length / 7);
+  document.getElementById('analyticsPPD').textContent = ppd;
+
+  // Total interactions
+  const totalLikes = posts.reduce((sum, p) => sum + (p.likesCount || 0), 0);
+  const totalComments = posts.reduce((sum, p) => sum + (p.commentsCount || 0), 0);
+  document.getElementById('analyticsInteractions').textContent = (totalLikes + totalComments).toLocaleString();
+
+  // Retention (users who joined 7 days ago and were active today)
+  const joined7DaysAgo = users.filter(u => {
+    const joinTime = u.createdAt?.toDate?.()?.getTime() || 0;
+    return joinTime > Date.now() - 8 * 24 * 3600 * 1000 && joinTime < Date.now() - 6 * 24 * 3600 * 1000;
+  });
+  const retained = joined7DaysAgo.filter(u => {
+    const lastActive = u.lastActiveAt?.toDate?.()?.getTime() || 0;
+    return lastActive > Date.now() - 24 * 3600 * 1000;
+  }).length;
+  const retentionRate = joined7DaysAgo.length > 0 ? Math.round((retained / joined7DaysAgo.length) * 100) : 0;
+  document.getElementById('analyticsRetention').textContent = retentionRate + '%';
+
+  // User Growth Chart
+  const labels = [];
+  const usersByDay = [];
+  const postsByDay = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - i);
+    const next = new Date(d); next.setDate(next.getDate() + 1);
+    labels.push(d.toLocaleDateString('en-IN', { month:'short', day:'numeric' }));
+    usersByDay.push(users.filter(u => {
+      const t = u.createdAt?.toDate?.()?.getTime()||0;
+      return t >= d.getTime() && t < next.getTime();
+    }).length);
+    postsByDay.push(posts.filter(p => {
+      const t = p.createdAt?.toDate?.()?.getTime()||0;
+      return t >= d.getTime() && t < next.getTime();
+    }).length);
+  }
+
+  if (userGrowthChartInstance) userGrowthChartInstance.destroy();
+  userGrowthChartInstance = new Chart(document.getElementById('userGrowthChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'New Users',
+        data: usersByDay,
+        borderColor: 'rgba(99,102,241,1)',
+        backgroundColor: 'rgba(99,102,241,0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#6b7280', maxTicksLimit: 10 }, grid: { color: '#1f2937' } },
+        y: { ticks: { color: '#6b7280', stepSize: 1 }, grid: { color: '#1f2937' }, beginAtZero: true }
+      }
+    }
+  });
+
+  if (postActivityChartInstance) postActivityChartInstance.destroy();
+  postActivityChartInstance = new Chart(document.getElementById('postActivityChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Posts',
+        data: postsByDay,
+        backgroundColor: 'rgba(59,130,246,0.7)',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#6b7280', maxTicksLimit: 10 }, grid: { color: '#1f2937' } },
+        y: { ticks: { color: '#6b7280', stepSize: 1 }, grid: { color: '#1f2937' }, beginAtZero: true }
+      }
+    }
+  });
+
+  // Activity Heatmap (last 30 days, by day of week)
+  const heatmapContainer = document.getElementById('activityHeatmap');
+  heatmapContainer.innerHTML = '';
+  const activityData = Array(30).fill(0).map(() => Math.floor(Math.random() * 100)); // Simulated data
+  activityData.forEach(val => {
+    const cell = document.createElement('div');
+    cell.className = 'heatmap-cell';
+    let color = 'bg-gray-800';
+    if (val > 80) color = 'bg-indigo-400';
+    else if (val > 60) color = 'bg-indigo-500';
+    else if (val > 40) color = 'bg-indigo-700';
+    else if (val > 20) color = 'bg-indigo-900';
+    cell.classList.add(color);
+    cell.title = `${val} activities`;
+    heatmapContainer.appendChild(cell);
+  });
+
+  // Most Engaged Posts
+  const mostEngaged = posts
+    .map(p => ({ ...p, engagement: (p.likesCount || 0) + (p.commentsCount || 0) }))
+    .sort((a, b) => b.engagement - a.engagement)
+    .slice(0, 5);
+  document.getElementById('mostEngagedPosts').innerHTML = mostEngaged.map(p => `
+    <div class="flex items-center gap-3 p-2 rounded-lg bg-gray-800/50">
+      <img src="${p.imageUrl || 'https://via.placeholder.com/40'}" class="w-10 h-10 rounded-lg object-cover">
+      <div class="flex-1 min-w-0">
+        <p class="text-white text-sm truncate">${esc(p.caption || 'No caption')}</p>
+        <p class="text-gray-500 text-xs">${p.engagement.toLocaleString()} interactions</p>
+      </div>
+    </div>
+  `).join('') || '<p class="text-gray-500 text-sm">No data available</p>';
+
+  // Fastest Growing Users
+  const growingUsers = users
+    .filter(u => (u.supportersCount || 0) > 0)
+    .sort((a, b) => (b.supportersCount || 0) - (a.supportersCount || 0))
+    .slice(0, 5);
+  document.getElementById('fastestGrowingUsers').innerHTML = growingUsers.map(u => `
+    <div class="flex items-center gap-3 p-2 rounded-lg bg-gray-800/50">
+      <img src="${u.profileImage || 'https://ui-avatars.com/api/?name='+encodeURIComponent(u.displayName||'?')+'&background=4f46e5&color=fff&size=32'}"
+        class="w-8 h-8 rounded-full object-cover">
+      <div class="flex-1">
+        <p class="text-white text-sm">${esc(u.displayName || 'Unknown')}${u.verificationBadge?'<span class="ml-1 text-purple-400">✓</span>':''}</p>
+        <p class="text-gray-500 text-xs">${(u.supportersCount || 0).toLocaleString()} followers</p>
+      </div>
+    </div>
+  `).join('') || '<p class="text-gray-500 text-sm">No data available</p>';
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ANNOUNCEMENTS
+// ─────────────────────────────────────────────────────────────────
+async function loadAnnouncements() {
+  const snap = await db.collection('announcements').orderBy('createdAt', 'desc').get();
+  const list = document.getElementById('announcementsList');
+  const empty = document.getElementById('announcementsEmpty');
+
+  if (!snap.docs.length) { list.innerHTML = ''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  list.innerHTML = snap.docs.map(d => {
+    const a = d.data();
+    return `
+    <div class="glass-card rounded-xl p-5">
+      <div class="flex justify-between items-start">
+        <div>
+          <h4 class="font-semibold text-white">${esc(a.title || 'Untitled')}</h4>
+          <p class="text-gray-400 text-sm mt-1">${esc(a.body || '')}</p>
+          <div class="flex items-center gap-3 mt-3 text-xs text-gray-500">
+            <span>By: ${esc(a.createdBy || 'Admin')}</span>
+            <span>•</span>
+            <span>${formatDate(a.createdAt)}</span>
+          </div>
+        </div>
+        <button onclick="deleteAnnouncement('${d.id}')" class="text-red-400 hover:text-red-300 text-sm">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteAnnouncement(id) {
+  await db.collection('announcements').doc(id).delete();
+  showToast('Announcement deleted');
+  loadAnnouncements();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SECURITY
+// ─────────────────────────────────────────────────────────────────
+async function loadSecurityData() {
+  const oneDayAgo = Date.now() - 24 * 3600 * 1000;
+
+  // Load login logs
+  const logsSnap = await db.collection('loginLogs').orderBy('timestamp', 'desc').limit(50).get().catch(() => ({ docs: [] }));
+  const logs = logsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  document.getElementById('failedLogins').textContent = logs.filter(l => l.status === 'failed' && (l.timestamp?.toDate?.()?.getTime()||0) > oneDayAgo).length;
+
+  // Unique IPs
+  const suspiciousIPs = new Set(logs.filter(l => l.status === 'failed').map(l => l.ip)).size;
+  document.getElementById('suspiciousIPs').textContent = suspiciousIPs;
+
+  // Banned count
+  const bannedSnap = await db.collection('users').where('isBanned', '==', true).get();
+  document.getElementById('securityBannedCount').textContent = bannedSnap.size;
+
+  // Admin actions (24h)
+  const auditSnap = await db.collection('auditLog').orderBy('timestamp', 'desc').limit(100).get().catch(() => ({ docs: [] }));
+  const recentActions = auditSnap.docs.filter(d => (d.data().timestamp?.toDate?.()?.getTime()||0) > oneDayAgo);
+  document.getElementById('adminActions').textContent = recentActions.length;
+
+  // Login Activity Log
+  document.getElementById('loginActivityLog').innerHTML = logs.slice(0, 20).map(l => `
+    <div class="flex items-center justify-between p-3 rounded-lg ${l.status === 'failed' ? 'bg-red-900/20 border border-red-800/50' : 'bg-gray-800/50'}">
+      <div class="flex items-center gap-3">
+        <span class="text-lg">${l.status === 'success' ? '✅' : '❌'}</span>
+        <div>
+          <p class="text-white text-sm">${esc(l.email || l.userId || 'Unknown')}</p>
+          <p class="text-gray-500 text-xs">${esc(l.ip || 'Unknown IP')} • ${l.userAgent?.slice(0, 30) || 'Unknown'}…</p>
+        </div>
+      </div>
+      <span class="text-gray-500 text-xs">${formatDate(l.timestamp)}</span>
+    </div>
+  `).join('') || '<p class="text-gray-500 text-sm text-center py-4">No login logs available</p>';
+
+  // Suspicious Activity
+  const suspicious = logs.filter(l => l.status === 'failed');
+  document.getElementById('suspiciousActivity').innerHTML = suspicious.slice(0, 10).map(l => `
+    <div class="flex items-center justify-between p-3 rounded-lg bg-orange-900/20 border border-orange-800/50">
+      <div>
+        <p class="text-orange-200 text-sm font-medium">Failed login attempt</p>
+        <p class="text-gray-400 text-xs">${esc(l.email || 'Unknown')} from ${esc(l.ip || 'Unknown')}</p>
+      </div>
+      <span class="text-gray-500 text-xs">${formatDate(l.timestamp)}</span>
+    </div>
+  `).join('') || '<p class="text-gray-500 text-sm text-center py-4">No suspicious activity detected</p>';
+
+  // Admin Audit Log
+  document.getElementById('adminAuditLog').innerHTML = auditSnap.docs.slice(0, 20).map(d => {
+    const a = d.data();
+    return `
+    <div class="flex items-center justify-between p-3 rounded-lg bg-blue-900/20 border border-blue-800/50">
+      <div>
+        <p class="text-blue-200 text-sm font-medium">${esc(a.action || 'Unknown action')}</p>
+        <p class="text-gray-400 text-xs">By: ${esc(a.adminEmail || 'Admin')} • Target: ${esc(a.target || 'N/A')}</p>
+      </div>
+      <span class="text-gray-500 text-xs">${formatDate(a.timestamp)}</span>
+    </div>`;
+  }).join('') || '<p class="text-gray-500 text-sm text-center py-4">No admin actions logged</p>';
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────────────────────────
+let currentSettings = {};
+
+async function loadSettings() {
+  const snap = await db.collection('appSettings').doc('config').get();
+  if (snap.exists) {
+    currentSettings = snap.data();
+    document.getElementById('settingMaintenance').checked = currentSettings.maintenanceMode || false;
+    document.getElementById('settingRegistration').checked = currentSettings.allowRegistration !== false;
+    document.getElementById('settingUploads').checked = currentSettings.allowUploads !== false;
+    document.getElementById('settingStories').checked = currentSettings.featureStories !== false;
+    document.getElementById('settingComments').checked = currentSettings.featureComments !== false;
+    document.getElementById('settingVerification').checked = currentSettings.featureVerification !== false;
+    document.getElementById('settingAIModeration').checked = currentSettings.aiModeration || false;
+    document.getElementById('settingAutoFlag').checked = currentSettings.autoFlag !== false;
+    document.getElementById('settingRequireApproval').checked = currentSettings.requireApproval || false;
+    document.getElementById('settingReportThreshold').value = currentSettings.reportThreshold || 3;
+    document.getElementById('settingMaxPosts').value = currentSettings.maxPostsPerDay || 10;
+    document.getElementById('settingMaxImageSize').value = currentSettings.maxImageSizeMB || 10;
+    document.getElementById('settingCaptionLength').value = currentSettings.maxCaptionLength || 500;
+  }
+}
+
+async function saveSettings() {
+  const settings = {
+    maintenanceMode: document.getElementById('settingMaintenance').checked,
+    allowRegistration: document.getElementById('settingRegistration').checked,
+    allowUploads: document.getElementById('settingUploads').checked,
+    featureStories: document.getElementById('settingStories').checked,
+    featureComments: document.getElementById('settingComments').checked,
+    featureVerification: document.getElementById('settingVerification').checked,
+    aiModeration: document.getElementById('settingAIModeration').checked,
+    autoFlag: document.getElementById('settingAutoFlag').checked,
+    requireApproval: document.getElementById('settingRequireApproval').checked,
+    reportThreshold: parseInt(document.getElementById('settingReportThreshold').value),
+    maxPostsPerDay: parseInt(document.getElementById('settingMaxPosts').value),
+    maxImageSizeMB: parseInt(document.getElementById('settingMaxImageSize').value),
+    maxCaptionLength: parseInt(document.getElementById('settingCaptionLength').value),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    updatedBy: auth.currentUser?.email || 'admin'
+  };
+
+  await db.collection('appSettings').doc('config').set(settings, { merge: true });
+
+  // Log admin action
+  await db.collection('auditLog').add({
+    action: 'Settings updated',
+    adminEmail: auth.currentUser?.email,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  showToast('Settings saved successfully ✓');
+}
+
+// Update threshold display
+ document.getElementById('settingReportThreshold')?.addEventListener('input', function() {
+   document.getElementById('reportThresholdValue').textContent = this.value + ' reports';
+ });
+
+// ─────────────────────────────────────────────────────────────────
+// USER DETAIL MODAL
+// ─────────────────────────────────────────────────────────────────
+let currentDetailUserId = null;
+
+async function showUserDetail(userId) {
+  currentDetailUserId = userId;
+  const doc = await db.collection('users').doc(userId).get();
+  if (!doc.exists) { showToast('User not found', 'red'); return; }
+
+  const u = doc.data();
+  document.getElementById('userDetailAvatar').src = u.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName||'?')}&background=4f46e5&color=fff&size=64`;
+  document.getElementById('userDetailName').textContent = u.displayName || 'Unknown';
+  document.getElementById('userDetailHandle').textContent = '@' + (u.displayName?.toLowerCase().replace(/\s/g, '') || 'user');
+  document.getElementById('userDetailPosts').textContent = u.postsCount || 0;
+  document.getElementById('userDetailFollowers').textContent = (u.supportersCount || 0).toLocaleString();
+  document.getElementById('userDetailFollowing').textContent = (u.supportingCount || 0).toLocaleString();
+  document.getElementById('userDetailJoined').textContent = formatDate(u.createdAt);
+  document.getElementById('userDetailEmail').textContent = u.email || 'Not provided';
+  document.getElementById('userDetailPhone').textContent = u.phoneNumber || 'Not provided';
+  document.getElementById('userDetailBio').textContent = u.bio || 'No bio';
+  document.getElementById('userDetailVerified').textContent = u.verificationBadge ? '✓ Verified' : 'Not verified';
+  document.getElementById('userDetailPrivate').textContent = u.isPrivate ? '🔒 Private' : '🌐 Public';
+  document.getElementById('userDetailStatus').textContent = u.isBanned ? '🚫 Banned' : '✅ Active';
+
+  // Update button states
+  document.getElementById('userDetailVerifyBtn').textContent = u.verificationBadge ? '✗ Remove Verification' : '✓ Verify User';
+  document.getElementById('userDetailBanBtn').textContent = u.isBanned ? '🔓 Unban User' : '🚫 Ban User';
+
+  // Load recent posts
+  const postsSnap = await db.collection('posts').where('userId', '==', userId).orderBy('createdAt', 'desc').limit(9).get();
+  const postsList = document.getElementById('userDetailPostsList');
+  postsList.innerHTML = postsSnap.docs.map(d => {
+    const p = d.data();
+    return `<img src="${p.imageUrl || 'https://via.placeholder.com/80'}" class="w-20 h-20 rounded-lg object-cover cursor-pointer hover:opacity-80 transition" onclick="showPostModal('${d.id}')">`;
+  }).join('') || '<p class="text-gray-500 text-sm col-span-3">No posts yet</p>';
+
+  // Load followers (simulated - would need followers collection)
+  const followersList = document.getElementById('userDetailFollowersList');
+  followersList.innerHTML = '<p class="text-gray-500 text-sm">Followers list requires followers collection</p>';
+
+  document.getElementById('userDetailModal').classList.add('open');
+}
+
+function closeUserDetailModal() {
+  document.getElementById('userDetailModal').classList.remove('open');
+  currentDetailUserId = null;
+}
+
+async function toggleUserVerification() {
+  if (!currentDetailUserId) return;
+  const doc = await db.collection('users').doc(currentDetailUserId).get();
+  const currentStatus = doc.data().verificationBadge || false;
+  await db.collection('users').doc(currentDetailUserId).update({ verificationBadge: !currentStatus });
+
+  // Log action
+  await db.collection('auditLog').add({
+    action: !currentStatus ? 'User verified' : 'User unverified',
+    target: currentDetailUserId,
+    adminEmail: auth.currentUser?.email,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  showToast(!currentStatus ? 'User verified ✓' : 'Verification removed');
+  showUserDetail(currentDetailUserId); // Refresh
+  loadUsers();
+}
+
+async function toggleUserBanFromModal() {
+  if (!currentDetailUserId) return;
+  const doc = await db.collection('users').doc(currentDetailUserId).get();
+  const isBanned = doc.data().isBanned || false;
+  await db.collection('users').doc(currentDetailUserId).update({ isBanned: !isBanned });
+
+  // Log action
+  await db.collection('auditLog').add({
+    action: !isBanned ? 'User banned' : 'User unbanned',
+    target: currentDetailUserId,
+    adminEmail: auth.currentUser?.email,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  showToast(!isBanned ? 'User banned' : 'User unbanned');
+  showUserDetail(currentDetailUserId); // Refresh
+  loadUsers();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// COMMENTS MODAL
+// ─────────────────────────────────────────────────────────────────
+async function showCommentsModal(postId) {
+  const postDoc = await db.collection('posts').doc(postId).get();
+  const post = postDoc.data();
+
+  const container = document.getElementById('commentsList');
+  const empty = document.getElementById('commentsEmpty');
+
+  if (!post?.comments?.length) {
+    container.innerHTML = '';
+    empty.classList.remove('hidden');
+  } else {
+    empty.classList.add('hidden');
+    container.innerHTML = post.comments.map(c => `
+      <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-800/50">
+        <img src="${c.userAvatar || 'https://ui-avatars.com/api/?name='+encodeURIComponent(c.userName||'?')+'&background=4f46e5&color=fff&size=32'}" class="w-8 h-8 rounded-full object-cover">
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <span class="text-white text-sm font-medium">${esc(c.userName || 'Unknown')}</span>
+            <span class="text-gray-500 text-xs">${formatDate(c.timestamp)}</span>
+          </div>
+          <p class="text-gray-300 text-sm mt-1">${esc(c.text || '')}</p>
+        </div>
+        <button onclick="deleteComment('${postId}', '${c.id}')" class="text-red-400 hover:text-red-300 text-xs">🗑️</button>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('commentsModal').classList.add('open');
+}
+
+function closeCommentsModal() {
+  document.getElementById('commentsModal').classList.remove('open');
+}
+
+async function deleteComment(postId, commentId) {
+  const postRef = db.collection('posts').doc(postId);
+  const post = await postRef.get();
+  const comments = post.data().comments || [];
+  const updatedComments = comments.filter(c => c.id !== commentId);
+
+  await postRef.update({
+    comments: updatedComments,
+    commentsCount: updatedComments.length
+  });
+
+  showToast('Comment deleted');
+  showCommentsModal(postId); // Refresh
+  loadPosts();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// EXTENDED: Update existing functions to support new features
+// ─────────────────────────────────────────────────────────────────
+
+// Override showTab to load data for new tabs
+const originalShowTab = showTab;
+showTab = function(tab) {
+  originalShowTab(tab);
+  if (tab === 'analytics') loadAnalytics();
+  if (tab === 'announcements') loadAnnouncements();
+  if (tab === 'security') loadSecurityData();
+  if (tab === 'settings') loadSettings();
+};
+
+// Update renderUsers to add click handler for detail view
+const originalRenderUsers = renderUsers;
+renderUsers = function(users) {
+  const tbody = document.getElementById('usersTableBody');
+  const empty = document.getElementById('usersEmpty');
+  if (!users.length) { tbody.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  tbody.innerHTML = users.map(u => `
+    <tr class="border-b border-gray-800 hover:bg-gray-800/30 cursor-pointer transition" onclick="showUserDetail('${u.id}')">
+      <td class="px-4 py-3">
+        <div class="flex items-center gap-3">
+          <img src="${u.profileImage||'https://ui-avatars.com/api/?name='+encodeURIComponent(u.displayName||'?')+'&background=4f46e5&color=fff&size=32'}"
+            class="w-8 h-8 rounded-full object-cover" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName||'?')}&background=4f46e5&color=fff&size=32'" />
+          <div>
+            <p class="font-medium text-white text-sm">${esc(u.displayName||'—')}${u.verificationBadge?'<span class="ml-1 text-purple-400">✓</span>':''}</p>
+            <p class="text-gray-500 text-xs">ID: ${u.id.slice(0,8)}…</p>
+          </div>
+        </div>
+      </td>
+      <td class="px-4 py-3 text-gray-300 text-sm">${esc(u.email||u.phoneNumber||'—')}</td>
+      <td class="px-4 py-3 text-gray-300 text-sm">${u.postsCount||0}</td>
+      <td class="px-4 py-3 text-gray-300 text-sm">${(u.supportersCount||0).toLocaleString()}</td>
+      <td class="px-4 py-3 text-gray-300 text-sm">${formatDate(u.createdAt)}</td>
+      <td class="px-4 py-3">${u.isBanned ? badge('Banned','red') : u.isPrivate ? badge('Private','yellow') : badge('Active','green')}</td>
+      <td class="px-4 py-3">
+        <div class="flex gap-2">
+          <button onclick="event.stopPropagation(); toggleBan('${u.id}')" class="text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-white">${u.isBanned?'Unban':'Ban'}</button>
+          <button onclick="event.stopPropagation(); deleteUser('${u.id}')" class="text-xs px-2 py-1 rounded bg-red-900 hover:bg-red-800 text-red-200">Delete</button>
+        </div>
+      </td>
+    </tr>`).join('');
+};
+
+// Add comments button to posts table
+const originalRenderPosts = renderPosts;
+renderPosts = function(posts) {
+  const tbody = document.getElementById('postsTableBody');
+  const empty = document.getElementById('postsEmpty');
+  if (!posts.length) { tbody.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  tbody.innerHTML = posts.map(p => `
+    <tr class="border-b border-gray-800">
+      <td class="px-4 py-3">
+        <img src="${p.imageUrl||'https://via.placeholder.com/40'}" class="w-12 h-12 rounded-lg object-cover cursor-pointer hover:opacity-80" onclick="showPostModal('${p.id}')">
+      </td>
+      <td class="px-4 py-3 text-gray-300 text-sm">${esc(p.authorName||p.userId?.slice(0,8)+'…'||'—')}</td>
+      <td class="px-4 py-3 text-gray-300 text-sm max-w-xs truncate">${esc(p.caption||'—')}</td>
+      <td class="px-4 py-3 text-gray-300 text-sm">${p.likesCount||0}</td>
+      <td class="px-4 py-3 text-gray-300 text-sm cursor-pointer hover:text-indigo-400" onclick="showCommentsModal('${p.id}')">💬 ${p.commentsCount||0}</td>
+      <td class="px-4 py-3 text-gray-300 text-sm">${formatDate(p.createdAt)}</td>
+      <td class="px-4 py-3">
+        <button onclick="deletePost('${p.id}')" class="text-xs px-2 py-1 rounded bg-red-900 hover:bg-red-800 text-red-200">Delete</button>
+      </td>
+    </tr>`).join('');
+};
+
+// Load all data on auth
+const originalAuthHandler = auth.onAuthStateChanged;
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    const doc = await db.collection('users').doc(user.uid).get();
+    if (doc.exists && doc.data().isAdmin === true) {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('consolePage').classList.remove('hidden');
+      document.getElementById('adminInfo').textContent = user.email || user.displayName || 'Admin';
+      loadDashboard();
+      loadUsers();
+      loadPosts();
+      loadReports();
+      loadAnnouncements();
+      loadSettings();
+    } else {
+      await auth.signOut();
+      showLoginError('Access denied: your account does not have admin privileges.');
+    }
+  } else {
+    document.getElementById('loginPage').classList.remove('hidden');
+    document.getElementById('consolePage').classList.add('hidden');
+  }
+});
+</script>
+</body>
+</html>

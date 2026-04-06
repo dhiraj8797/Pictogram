@@ -1,0 +1,868 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
+import '../../../widgets/glass_widgets.dart';
+import '../../../widgets/verified_badge.dart';
+import '../../../core/models/user.dart';
+import '../../../core/models/post.dart';
+import '../../../core/providers/auth_provider.dart';
+import '../../../core/services/post_service.dart';
+import '../../../core/services/follow_service.dart';
+
+class GlassProfileScreen extends ConsumerStatefulWidget {
+  final String userId;
+
+  const GlassProfileScreen({super.key, required this.userId});
+
+  @override
+  ConsumerState<GlassProfileScreen> createState() => _GlassProfileScreenState();
+}
+
+class _GlassProfileScreenState extends ConsumerState<GlassProfileScreen> {
+  final PostService _postService = PostService();
+  final FollowService _followService = FollowService();
+  
+  AppUser? _user;
+  List<Post> _posts = [];
+  bool _isLoading = true;
+  int _currentTabIndex = 0;
+  bool _isFollowing = false;
+  bool _isFollowLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    print('DEBUG: ProfileScreen initState - widget.userId: ${widget.userId}');
+    _loadProfileData();
+  }
+
+  @override
+  void didUpdateWidget(GlassProfileScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Refresh data when returning from edit profile
+    if (mounted) {
+      _loadProfileData();
+    }
+  }
+
+  Future<void> _loadProfileData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Load real user data
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .get();
+      
+      if (userDoc.exists) {
+        _user = AppUser.fromFirestore(userDoc);
+        
+        // Get real counts
+        final postsCount = await _postService.getUserPostsCount(widget.userId);
+        final supportersCount = await _followService.getSupportersCount(widget.userId);
+        final circlesCount = await _followService.getCirclesCount(widget.userId);
+        
+        _user = _user!.copyWith(
+          postsCount: postsCount,
+          supportersCount: supportersCount,
+          circlesCount: circlesCount,
+        );
+      } else {
+        // User not found, use current user if it's their own profile
+        final currentUser = ref.read(currentUserProvider).value;
+        if (currentUser != null && currentUser.uid == widget.userId) {
+          _user = currentUser;
+          
+          // Get real counts
+          final postsCount = await _postService.getUserPostsCount(widget.userId);
+          final supportersCount = await _followService.getSupportersCount(widget.userId);
+          final circlesCount = await _followService.getCirclesCount(widget.userId);
+          
+          _user = _user!.copyWith(
+            postsCount: postsCount,
+            supportersCount: supportersCount,
+            circlesCount: circlesCount,
+          );
+        } else {
+          throw Exception('User not found');
+        }
+      }
+
+      // Load user posts
+      print('DEBUG: Loading posts for user: ${widget.userId}');
+      final posts = await _postService.getUserPosts(widget.userId, limit: 9);
+      print('DEBUG: Found ${posts.length} posts');
+      for (var post in posts) {
+        print('DEBUG: Post - ID: ${post.postId}, Image: ${post.imageUrl}');
+      }
+
+      // Load follow status
+      final currentUser = ref.read(currentUserProvider).value;
+      if (currentUser != null && currentUser.uid != widget.userId) {
+        _isFollowing = await _followService.isFollowing(currentUser.uid, widget.userId);
+        print('DEBUG: Follow status loaded: $_isFollowing');
+      }
+
+      setState(() {
+        _posts = posts;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Failed to load profile data: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = ref.watch(currentUserProvider).value;
+    final isOwnProfile = currentUser?.uid == widget.userId;
+    
+    print('DEBUG: ProfileScreen build - currentUser.uid: ${currentUser?.uid}');
+    print('DEBUG: ProfileScreen build - widget.userId: ${widget.userId}');
+    print('DEBUG: ProfileScreen build - isOwnProfile: $isOwnProfile');
+    print('DEBUG: ProfileScreen build - _posts.length: ${_posts.length}');
+
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            _ProfileTopBar(isOwnProfile: isOwnProfile),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+                child: Column(
+                  children: [
+                    if (_isLoading)
+                      const _ProfileLoading()
+                    else
+                      Column(
+                        children: [
+                          _ProfileHeader(user: _user),
+                          const SizedBox(height: 18),
+                          _ProfileActions(
+                            user: _user,
+                            isOwnProfile: isOwnProfile,
+                            profileUserId: widget.userId,
+                            isFollowing: _isFollowing,
+                            isFollowLoading: _isFollowLoading,
+                            onFollowToggle: () => _toggleFollow(ref, context, ref.read(currentUserProvider).value?.uid, widget.userId, _isFollowing),
+                          ),
+                          const SizedBox(height: 18),
+                          _ProfileGrid(
+                            posts: _posts,
+                            currentTabIndex: _currentTabIndex,
+                            onTabChanged: (index) {
+                              setState(() {
+                                _currentTabIndex = index;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileTopBar extends StatelessWidget {
+  final bool isOwnProfile;
+
+  const _ProfileTopBar({
+    required this.isOwnProfile,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Row(
+        children: [
+          if (isOwnProfile)
+            GlassIconButton(
+              icon: Icons.settings_outlined,
+              onTap: () => context.push('/settings'),
+            )
+          else
+            GlassIconButton(
+              icon: Icons.arrow_back_ios_new_rounded,
+              onTap: () => Navigator.pop(context),
+            ),
+          const Spacer(),
+          Text(
+            'PictoGram',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+          const Spacer(),
+          GlassIconButton(
+            icon: Icons.send_rounded,
+            onTap: () {},
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileHeader extends StatelessWidget {
+  final AppUser? user;
+
+  const _ProfileHeader({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    if (user == null) return const SizedBox();
+
+    return GlassCard(
+      radius: 32,
+      padding: const EdgeInsets.fromLTRB(18, 22, 18, 20),
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.9),
+                      AppColors.pinkGlow,
+                      AppColors.purpleGlow,
+                    ],
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 54,
+                  backgroundImage: NetworkImage(user!.profileImage ?? ''),
+                ),
+              ),
+              if (user!.verificationBadge)
+                Positioned(
+                  right: 2,
+                  bottom: 6,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFAE97FF),
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(5),
+                    child: const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                user!.displayName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Show golden badge for official PictoGram account
+              if (user!.uid == 'pictogram_official' || 
+                  user!.displayName.toLowerCase().contains('pictogram'))
+                const VerifiedBadge(isOfficial: true, size: 22)
+              else if (user!.verificationBadge)
+                const VerifiedBadge(isOfficial: false, size: 22),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            user!.formattedLocation,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            user!.formattedBio,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              height: 1.5,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _StatItem(value: '${user!.postsCount}', label: 'Posts'),
+              _StatItem(value: _formatCount(user!.supportersCount), label: user!.followersText),
+              _StatItem(value: _formatCount(user!.circlesCount), label: 'Circles'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatCount(int count) {
+    if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(1)}K';
+    }
+    return count.toString();
+  }
+
+  Future<void> _toggleFollow(
+    WidgetRef ref,
+    BuildContext context,
+    String? currentUserId,
+    String profileUserId,
+    bool isCurrentlyFollowing,
+  ) async {
+    if (currentUserId == null || currentUserId == profileUserId) return;
+
+    print('DEBUG: Toggle follow - Current: $currentUserId, Profile: $profileUserId, IsFollowing: $isCurrentlyFollowing');
+
+    // Set loading state
+    setState(() {
+      _isFollowLoading = true;
+    });
+
+    try {
+      final followService = FollowService();
+      final currentUser = ref.read(currentUserProvider).value;
+      final profileUser = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(profileUserId)
+          .get()
+          .then((doc) => AppUser.fromFirestore(doc));
+
+      print('DEBUG: Profile user found: ${profileUser.displayName}');
+
+      if (isCurrentlyFollowing) {
+        print('DEBUG: Unfollowing user...');
+        await followService.unfollowUser(
+          followerId: currentUserId,
+          followingId: profileUserId,
+        );
+        print('DEBUG: Unfollowed successfully');
+        
+        // Update local state
+        setState(() {
+          _isFollowing = false;
+          if (_user != null) {
+            _user = _user!.copyWith(
+              supportersCount: _user!.supportersCount - 1,
+            );
+          }
+        });
+      } else {
+        print('DEBUG: Following user...');
+        await followService.followUser(
+          followerId: currentUserId,
+          followingId: profileUserId,
+          followerName: currentUser?.displayName ?? 'Unknown',
+          followerProfileImage: currentUser?.profileImage ?? '',
+          followingName: profileUser.displayName,
+          followingProfileImage: profileUser.profileImage ?? '',
+        );
+        print('DEBUG: Followed successfully');
+        
+        // Update local state
+        setState(() {
+          _isFollowing = true;
+          if (_user != null) {
+            _user = _user!.copyWith(
+              supportersCount: _user!.supportersCount + 1,
+            );
+          }
+        });
+      }
+      
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isCurrentlyFollowing ? 'Unfollowed successfully!' : 'Followed successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('DEBUG: Error in follow/unfollow: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      // Clear loading state
+      setState(() {
+        _isFollowLoading = false;
+      });
+    }
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _StatItem({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 16,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileActions extends ConsumerWidget {
+  final AppUser? user;
+  final bool isOwnProfile;
+  final String profileUserId;
+  final bool isFollowing;
+  final bool isFollowLoading;
+  final VoidCallback? onFollowToggle;
+
+  const _ProfileActions({
+    required this.user,
+    required this.isOwnProfile,
+    required this.profileUserId,
+    required this.isFollowing,
+    required this.isFollowLoading,
+    this.onFollowToggle,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentUser = ref.watch(currentUserProvider).value;
+    
+    if (user == null) return const SizedBox();
+
+    return Row(
+      children: [
+        Expanded(
+          child: GlassCard(
+            radius: 20,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            onTap: isOwnProfile 
+                ? () => context.push('/edit-profile') 
+                : isFollowLoading 
+                    ? null 
+                    : onFollowToggle,
+            child: isFollowLoading
+                ? const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Loading...',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    isOwnProfile 
+                        ? 'Edit Profile' 
+                        : isFollowing 
+                            ? 'Following' 
+                            : 'Follow',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                    ),
+                  ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        if (!isOwnProfile)
+          GlassCard(
+            radius: 20,
+            padding: const EdgeInsets.all(16),
+            onTap: () {
+              // TODO: Implement message functionality
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Message feature coming soon!'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            },
+            child: const Icon(
+              Icons.message_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+      ],
+    ),
+  }
+}
+
+class _ProfileGrid extends StatelessWidget {
+  final List<Post> posts;
+  final int currentTabIndex;
+  final Function(int) onTabChanged;
+
+  const _ProfileGrid({
+    required this.posts,
+    required this.currentTabIndex,
+    required this.onTabChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    print('DEBUG: _ProfileGrid build - Posts count: ${posts.length}, Current tab: $currentTabIndex');
+    
+    return GlassCard(
+      radius: 30,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _TabIcon(
+                icon: Icons.grid_view_rounded,
+                active: currentTabIndex == 0,
+                onTap: () => onTabChanged(0),
+              ),
+              _TabIcon(
+                icon: Icons.photo_library_outlined,
+                active: currentTabIndex == 2,
+                onTap: () => onTabChanged(2),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Tab 0: Grid View (3 photos per line)
+          if (currentTabIndex == 0)
+            GridView.builder(
+              itemCount: posts.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 0.82,
+              ),
+              itemBuilder: (context, index) {
+                print('DEBUG: Building grid item ${index}: ${posts[index].imageUrl}');
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Image.network(
+                    posts[index].imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      print('DEBUG: Error loading image ${posts[index].imageUrl}: $error');
+                      return Container(
+                        color: Colors.white.withOpacity(0.1),
+                        child: const Center(
+                          child: Icon(Icons.broken_image, color: Colors.white54),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+          // Tab 2: Single Photo View (1 photo per line)
+          if (currentTabIndex == 2)
+            ListView.builder(
+              itemCount: posts.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemBuilder: (context, index) {
+                print('DEBUG: Building list item ${index}: ${posts[index].imageUrl}');
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: Image.network(
+                      posts[index].imageUrl,
+                      fit: BoxFit.cover,
+                      height: 300,
+                      width: double.infinity,
+                      errorBuilder: (context, error, stackTrace) {
+                        print('DEBUG: Error loading image ${posts[index].imageUrl}: $error');
+                        return Container(
+                          height: 300,
+                          color: Colors.white.withOpacity(0.1),
+                          child: const Center(
+                            child: Icon(Icons.broken_image, color: Colors.white54),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+          if (posts.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.photo_library_outlined,
+                    size: 64,
+                    color: Colors.white.withOpacity(0.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No posts yet',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Start sharing your moments!',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TabIcon extends StatelessWidget {
+  final IconData icon;
+  final bool active;
+  final VoidCallback? onTap;
+
+  const _TabIcon({
+    required this.icon,
+    this.active = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: active ? Colors.white : Colors.white70,
+            size: 28,
+          ),
+          const SizedBox(height: 8),
+          Container(
+            height: 3,
+            width: 38,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: active ? Colors.white : Colors.transparent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileBottomBar extends StatelessWidget {
+  final AppUser? user;
+
+  const _ProfileBottomBar({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+      child: GlassCard(
+        radius: 28,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: const [
+            Icon(Icons.favorite_border_rounded, color: Colors.white, size: 28),
+            Icon(Icons.camera_alt_outlined, color: Colors.white, size: 28),
+            Icon(Icons.circle, color: Colors.white38, size: 10),
+            Icon(Icons.person_rounded, color: Colors.white, size: 28),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileLoading extends StatelessWidget {
+  const _ProfileLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        GlassCard(
+          radius: 32,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Container(
+                width: 114,
+                height: 114,
+                decoration: BoxDecoration(
+                  color: AppColors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: 120,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: AppColors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: 80,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: AppColors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: List.generate(3, (index) => Column(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      width: 60,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ],
+                )),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 18),
+        GlassCard(
+          radius: 30,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: List.generate(3, (index) => Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                )),
+              ),
+              const SizedBox(height: 16),
+              GridView.builder(
+                itemCount: 9,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 0.82,
+                ),
+                itemBuilder: (context, index) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
