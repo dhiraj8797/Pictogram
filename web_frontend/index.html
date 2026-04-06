@@ -78,46 +78,9 @@
                 <!-- Main Feed -->
                 <div>
                     <!-- Stories Section -->
-                    <div style="background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; padding: 16px 0; margin-bottom: 24px;">
-                        <div style="display: flex; gap: 12px; overflow-x: auto; padding: 0 16px;">
-                            <!-- Add Your Story -->
-                            <div style="flex-shrink: 0; text-align: center; cursor: pointer;">
-                                <div style="width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 2px; margin-bottom: 4px;">
-                                    <div style="width: 100%; height: 100%; border-radius: 50%; background: #262626; display: flex; align-items: center; justify-content: center;">
-                                        <i class="fas fa-plus" style="color: white; font-size: 20px;"></i>
-                                    </div>
-                                </div>
-                                <p style="color: white; font-size: 12px; margin: 0;">Your story</p>
-                            </div>
-                            
-                            <!-- Sample Stories -->
-                            <div style="flex-shrink: 0; text-align: center; cursor: pointer;">
-                                <div style="width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 2px; margin-bottom: 4px;">
-                                    <img src="https://picsum.photos/seed/story1/66/66" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                                </div>
-                                <p style="color: white; font-size: 12px; margin: 0;">alex_dreamer</p>
-                            </div>
-                            
-                            <div style="flex-shrink: 0; text-align: center; cursor: pointer;">
-                                <div style="width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 2px; margin-bottom: 4px;">
-                                    <img src="https://picsum.photos/seed/story2/66/66" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                                </div>
-                                <p style="color: white; font-size: 12px; margin: 0;">sarah_creative</p>
-                            </div>
-                            
-                            <div style="flex-shrink: 0; text-align: center; cursor: pointer;">
-                                <div style="width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 2px; margin-bottom: 4px;">
-                                    <img src="https://picsum.photos/seed/story3/66/66" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                                </div>
-                                <p style="color: white; font-size: 12px; margin: 0;">mike_adventures</p>
-                            </div>
-                            
-                            <div style="flex-shrink: 0; text-align: center; cursor: pointer;">
-                                <div style="width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 2px; margin-bottom: 4px;">
-                                    <img src="https://picsum.photos/seed/story4/66/66" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
-                                </div>
-                                <p style="color: white; font-size: 12px; margin: 0;">emma_artist</p>
-                            </div>
+                    <div id="storiesSection" style="background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; padding: 16px 0; margin-bottom: 24px;">
+                        <div id="storiesContainer" style="display: flex; gap: 12px; overflow-x: auto; padding: 0 16px;">
+                            <!-- Stories will be loaded here -->
                         </div>
                     </div>
                     
@@ -151,7 +114,7 @@
                         </div>
                         
                         <div id="suggestionsList">
-                            <!-- Suggestions will be loaded here -->
+                            <!-- Real suggestions will be loaded here -->
                         </div>
                     </div>
                     

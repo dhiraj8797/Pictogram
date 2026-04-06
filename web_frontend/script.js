@@ -689,13 +689,14 @@ class PictoGramApp {
     // Load sample data
     async loadSampleData() {
         if (this.firestore) {
-            // Load real posts from Firebase
+            // Load real data from Firebase only
             await this.loadAllPosts();
             await this.loadAllMessages();
         } else {
-            // Use demo data
-            this.loadDemoPosts();
-            this.loadDemoMessages();
+            // Show message that Firebase is not configured
+            console.log('Firebase not configured - no data loaded');
+            this.posts = [];
+            this.messages = [];
         }
     }
 
@@ -738,7 +739,7 @@ class PictoGramApp {
             
         } catch (error) {
             console.error('Error loading all posts:', error);
-            this.loadDemoPosts();
+            this.posts = [];
         }
     }
 
@@ -804,151 +805,8 @@ class PictoGramApp {
             
         } catch (error) {
             console.error('Error loading messages:', error);
-            this.loadDemoMessages();
+            this.messages = [];
         }
-    }
-
-    // Load demo messages
-    loadDemoMessages() {
-        this.messages = [
-            {
-                id: 1,
-                username: 'alex_dreamer',
-                avatar: 'https://picsum.photos/seed/alex/48/48',
-                lastMessage: 'Hey! How are you doing?',
-                time: '5 min ago',
-                unread: 2
-            },
-            {
-                id: 2,
-                username: 'sarah_creative',
-                avatar: 'https://picsum.photos/seed/sarah/48/48',
-                lastMessage: 'Thanks for the like!',
-                time: '1 hour ago',
-                unread: 0
-            },
-            {
-                id: 3,
-                username: 'mike_adventures',
-                avatar: 'https://picsum.photos/seed/mike/48/48',
-                lastMessage: 'Check out my new photos',
-                time: '3 hours ago',
-                unread: 1
-            },
-            {
-                id: 4,
-                username: 'emma_artist',
-                avatar: 'https://picsum.photos/seed/emma/48/48',
-                lastMessage: 'Love your work!',
-                time: '1 day ago',
-                unread: 0
-            }
-        ];
-    }
-    loadDemoPosts() {
-        this.posts = [
-            {
-                id: 1,
-                username: 'alex_dreamer',
-                avatar: 'https://picsum.photos/seed/alex/40/40',
-                image: 'https://picsum.photos/seed/post1/400/400',
-                caption: 'Beautiful sunset at the beach 🌅',
-                likes: 234,
-                comments: 18,
-                time: '2 hours ago',
-                liked: false
-            },
-            {
-                id: 2,
-                username: 'sarah_creative',
-                avatar: 'https://picsum.photos/seed/sarah/40/40',
-                image: 'https://picsum.photos/seed/post2/400/400',
-                caption: 'Coffee and creativity ☕✨',
-                likes: 189,
-                comments: 12,
-                time: '4 hours ago',
-                liked: true
-            },
-            {
-                id: 3,
-                username: 'mike_adventures',
-                avatar: 'https://picsum.photos/seed/mike/40/40',
-                image: 'https://picsum.photos/seed/post3/400/400',
-                caption: 'Mountain climbing adventure 🏔️',
-                likes: 456,
-                comments: 34,
-                time: '6 hours ago',
-                liked: false
-            },
-            {
-                id: 4,
-                username: 'emma_artist',
-                avatar: 'https://picsum.photos/seed/emma/40/40',
-                image: 'https://picsum.photos/seed/post4/400/400',
-                caption: 'Digital art creation 🎨',
-                likes: 678,
-                comments: 56,
-                time: '8 hours ago',
-                liked: true
-            },
-            {
-                id: 5,
-                username: 'john_photographer',
-                avatar: 'https://picsum.photos/seed/john/40/40',
-                image: 'https://picsum.photos/seed/post5/400/400',
-                caption: 'Street photography 📸',
-                likes: 345,
-                comments: 28,
-                time: '1 day ago',
-                liked: false
-            },
-            {
-                id: 6,
-                username: 'lisa_foodie',
-                avatar: 'https://picsum.photos/seed/lisa/40/40',
-                image: 'https://picsum.photos/seed/post6/400/400',
-                caption: 'Homemade pasta 🍝️',
-                likes: 567,
-                comments: 45,
-                time: '1 day ago',
-                liked: true
-            }
-        ];
-
-        this.messages = [
-            {
-                id: 1,
-                username: 'alex_dreamer',
-                avatar: 'https://picsum.photos/seed/alex/48/48',
-                lastMessage: 'Hey! How are you doing?',
-                time: '5 min ago',
-                unread: 2
-            },
-            {
-                id: 2,
-                username: 'sarah_creative',
-                avatar: 'https://picsum.photos/seed/sarah/48/48',
-                lastMessage: 'Thanks for the like!',
-                time: '1 hour ago',
-                unread: 0
-            },
-            {
-                id: 3,
-                username: 'mike_adventures',
-                avatar: 'https://picsum.photos/seed/mike/48/48',
-                lastMessage: 'Check out my new photos',
-                time: '3 hours ago',
-                unread: 1
-            },
-            {
-                id: 4,
-                username: 'emma_artist',
-                avatar: 'https://picsum.photos/seed/emma/48/48',
-                lastMessage: 'Love your work!',
-                time: '1 day ago',
-                unread: 0
-            }
-        ];
     }
 
     // Setup event listeners
@@ -1067,8 +925,17 @@ class PictoGramApp {
             app.viewComments(postId);
         };
 
-        window.followUser = (username) => {
-            app.followUser(username);
+        window.followUser = (userId) => {
+            app.followUser(userId);
+        };
+
+        // Story functions
+        window.createStory = () => {
+            app.createStory();
+        };
+
+        window.viewStory = (storyId) => {
+            app.viewStory(storyId);
         };
     }
 
@@ -1171,8 +1038,7 @@ class PictoGramApp {
             
         } catch (error) {
             console.error('Error loading user posts:', error);
-            // Use demo posts if Firebase fails
-            this.loadDemoUserPosts();
+            this.userPosts = [];
         }
     }
 
@@ -1232,11 +1098,123 @@ class PictoGramApp {
         // Update sidebar with user info
         this.updateSidebar();
         
+        // Load real stories
+        this.loadStories();
+        
         // Render posts feed
         this.renderPostsFeed();
         
-        // Render suggestions
-        this.renderSuggestions();
+        // Load real suggestions
+        this.loadSuggestions();
+    }
+
+    // Load real stories from Firebase
+    async loadStories() {
+        if (!this.firestore) return;
+        
+        try {
+            console.log('DEBUG: Loading stories from Firebase');
+            
+            const storiesContainer = document.getElementById('storiesContainer');
+            if (!storiesContainer) return;
+            
+            // Get stories from Firebase (last 24 hours)
+            const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            
+            const storiesSnapshot = await this.firestore
+                .collection('stories')
+                .where('createdAt', '>=', twentyFourHoursAgo)
+                .orderBy('createdAt', 'desc')
+                .limit(10)
+                .get();
+            
+            console.log('DEBUG: Found stories:', storiesSnapshot.size);
+            
+            // Add "Your Story" first
+            let storiesHTML = `
+                <div style="flex-shrink: 0; text-align: center; cursor: pointer;" onclick="createStory()">
+                    <div style="width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 2px; margin-bottom: 4px;">
+                        <div style="width: 100%; height: 100%; border-radius: 50%; background: #262626; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-plus" style="color: white; font-size: 20px;"></i>
+                        </div>
+                    </div>
+                    <p style="color: white; font-size: 12px; margin: 0;">Your story</p>
+                </div>
+            `;
+            
+            // Add real stories
+            storiesSnapshot.forEach(doc => {
+                const storyData = doc.data();
+                storiesHTML += `
+                    <div style="flex-shrink: 0; text-align: center; cursor: pointer;" onclick="viewStory('${doc.id}')">
+                        <div style="width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 2px; margin-bottom: 4px;">
+                            <img src="${storyData.image || storyData.imageUrl || `https://picsum.photos/seed/${doc.id}/66/66`}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                        </div>
+                        <p style="color: white; font-size: 12px; margin: 0;">${storyData.username || 'User'}</p>
+                    </div>
+                `;
+            });
+            
+            storiesContainer.innerHTML = storiesHTML;
+            
+        } catch (error) {
+            console.error('Error loading stories:', error);
+            // Hide stories section if no stories
+            const storiesSection = document.getElementById('storiesSection');
+            if (storiesSection) {
+                storiesSection.style.display = 'none';
+            }
+        }
+    }
+
+    // Load real suggestions from Firebase
+    async loadSuggestions() {
+        if (!this.firestore) return;
+        
+        try {
+            console.log('DEBUG: Loading suggestions from Firebase');
+            
+            const suggestionsList = document.getElementById('suggestionsList');
+            if (!suggestionsList) return;
+            
+            // Get users you don't follow (exclude yourself)
+            const usersSnapshot = await this.firestore
+                .collection('users')
+                .limit(10)
+                .get();
+            
+            const suggestions = usersSnapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(user => user.id !== this.currentUser.uid)
+                .slice(0, 5);
+            
+            if (suggestions.length === 0) {
+                suggestionsList.innerHTML = '<p style="color: #8e8e8e; text-align: center; padding: 20px;">No suggestions available</p>';
+                return;
+            }
+            
+            suggestionsList.innerHTML = suggestions.map(suggestion => `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="${suggestion.avatar || `https://picsum.photos/seed/${suggestion.id}/32/32`}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                        <div>
+                            <p style="color: white; font-weight: 600; margin: 0; font-size: 14px;">${suggestion.displayName || 'User'}</p>
+                            <p style="color: #8e8e8e; font-size: 12px; margin: 0;">Suggested for you</p>
+                        </div>
+                    </div>
+                    <button onclick="followUser('${suggestion.id}')" style="background: none; border: none; color: #0095f6; font-size: 12px; font-weight: 600; cursor: pointer;">
+                        Follow
+                    </button>
+                </div>
+            `).join('');
+            
+        } catch (error) {
+            console.error('Error loading suggestions:', error);
+            const suggestionsList = document.getElementById('suggestionsList');
+            if (suggestionsList) {
+                suggestionsList.innerHTML = '<p style="color: #8e8e8e; text-align: center; padding: 20px;">Unable to load suggestions</p>';
+            }
+        }
     }
 
     // Update sidebar with user info
@@ -1346,36 +1324,6 @@ class PictoGramApp {
         `;
     }
 
-    // Render suggestions
-    renderSuggestions() {
-        const suggestionsList = document.getElementById('suggestionsList');
-        if (!suggestionsList) return;
-        
-        // Sample suggestions - in real app, this would come from Firebase
-        const suggestions = [
-            { username: 'alex_dreamer', avatar: 'https://picsum.photos/seed/alex/32/32', mutualFollowers: 12 },
-            { username: 'sarah_creative', avatar: 'https://picsum.photos/seed/sarah/32/32', mutualFollowers: 8 },
-            { username: 'mike_adventures', avatar: 'https://picsum.photos/seed/mike/32/32', mutualFollowers: 15 },
-            { username: 'emma_artist', avatar: 'https://picsum.photos/seed/emma/32/32', mutualFollowers: 6 },
-            { username: 'john_photographer', avatar: 'https://picsum.photos/seed/john/32/32', mutualFollowers: 3 }
-        ];
-        
-        suggestionsList.innerHTML = suggestions.map(suggestion => `
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <img src="${suggestion.avatar}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
-                    <div>
-                        <p style="color: white; font-weight: 600; margin: 0; font-size: 14px;">${suggestion.username}</p>
-                        <p style="color: #8e8e8e; font-size: 12px; margin: 0;">Suggested for you</p>
-                    </div>
-                </div>
-                <button onclick="followUser('${suggestion.username}')" style="background: none; border: none; color: #0095f6; font-size: 12px; font-weight: 600; cursor: pointer;">
-                    Follow
-                </button>
-            </div>
-        `).join('');
-    }
-
     // Post interaction functions
     likePost(postId) {
         const post = this.posts.find(p => p.id === postId) || this.userPosts?.find(p => p.id === postId);
@@ -1406,8 +1354,17 @@ class PictoGramApp {
         this.showNotification('Comments view coming soon!', 'info');
     }
 
-    followUser(username) {
-        this.showNotification(`Following ${username}!`, 'success');
+    followUser(userId) {
+        this.showNotification(`Following user!`, 'success');
+    }
+
+    // Story functions
+    createStory() {
+        this.showNotification('Story creation coming soon!', 'info');
+    }
+
+    viewStory(storyId) {
+        this.showNotification('Story viewer coming soon!', 'info');
     }
 
     // Calculate total likes received
