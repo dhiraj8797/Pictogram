@@ -1,19 +1,244 @@
-// PictoGram Website JavaScript
+// PictoGram Website JavaScript with Firebase Integration
 class PictoGramApp {
     constructor() {
         this.currentUser = null;
         this.posts = [];
         this.messages = [];
+        this.auth = null;
+        this.firestore = null;
         this.init();
     }
 
-    init() {
+    async init() {
+        // Initialize Firebase
+        this.initializeFirebase();
+        
+        // Wait for Firebase to initialize
+        await this.waitForFirebase();
+        
+        // Setup auth listener
+        this.setupAuthListener();
+        
+        // Load sample data (will be replaced with real data)
         this.loadSampleData();
         this.setupEventListeners();
         this.setupPostActions();
         this.renderPosts();
         this.renderMessages();
         this.setupSmoothScrolling();
+    }
+
+    // Initialize Firebase with your app's configuration
+    initializeFirebase() {
+        // TODO: Replace with your actual Firebase config from your Flutter app
+        const firebaseConfig = {
+            apiKey: "your-api-key-here",
+            authDomain: "your-project-id.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "your-sender-id",
+            appId: "your-app-id"
+        };
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            this.auth = firebase.auth();
+            this.firestore = firebase.firestore();
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+            // For demo purposes, continue without Firebase
+            this.showNotification('Firebase not configured - using demo mode', 'info');
+        }
+    }
+
+    async waitForFirebase() {
+        // Wait a bit for Firebase to initialize
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    // Setup Firebase auth listener
+    setupAuthListener() {
+        if (this.auth) {
+            this.auth.onAuthStateChanged((user) => {
+                if (user) {
+                    this.currentUser = {
+                        uid: user.uid,
+                        email: user.email,
+                        displayName: user.displayName || user.email.split('@')[0],
+                        avatar: user.photoURL || `https://picsum.photos/seed/${user.uid}/120/120`
+                    };
+                    this.showNotification(`Welcome back, ${this.currentUser.displayName}!`, 'success');
+                    this.updateUIForLoggedInUser();
+                } else {
+                    this.currentUser = null;
+                    this.updateUIForLoggedOutUser();
+                }
+            });
+        }
+    }
+
+    // Firebase Login
+    async handleLogin(event) {
+        event.preventDefault();
+        
+        if (!this.auth) {
+            this.showNotification('Firebase not configured - using demo mode', 'info');
+            // Demo login
+            const email = event.target.querySelector('input[type="email"]').value;
+            this.currentUser = {
+                uid: 'demo-user',
+                email: email,
+                displayName: email.split('@')[0],
+                avatar: `https://picsum.photos/seed/${email}/120/120`
+            };
+            closeModal('loginModal');
+            this.showNotification('Demo login successful!', 'success');
+            this.updateUIForLoggedInUser();
+            return;
+        }
+
+        const email = event.target.querySelector('input[type="email"]').value;
+        const password = event.target.querySelector('input[type="password"]').value;
+
+        try {
+            const userCredential = await this.auth.signInWithEmailAndPassword(email, password);
+            closeModal('loginModal');
+            this.showNotification('Login successful! Welcome back!', 'success');
+        } catch (error) {
+            console.error('Login error:', error);
+            this.showNotification(this.getErrorMessage(error.code), 'error');
+        }
+    }
+
+    // Firebase Signup
+    async handleSignup(event) {
+        event.preventDefault();
+        
+        if (!this.auth) {
+            this.showNotification('Firebase not configured - using demo mode', 'info');
+            // Demo signup
+            const displayName = event.target.querySelector('input[type="text"]').value;
+            const email = event.target.querySelector('input[type="email"]').value;
+            this.currentUser = {
+                uid: 'demo-user',
+                email: email,
+                displayName: displayName,
+                avatar: `https://picsum.photos/seed/${email}/120/120`
+            };
+            closeModal('signupModal');
+            this.showNotification('Demo account created successfully!', 'success');
+            this.updateUIForLoggedInUser();
+            return;
+        }
+
+        const displayName = event.target.querySelector('input[type="text"]').value;
+        const email = event.target.querySelector('input[type="email"]').value;
+        const password = event.target.querySelector('input[type="password"]').value;
+
+        try {
+            const userCredential = await this.auth.createUserWithEmailAndPassword(email, password);
+            
+            // Update display name
+            await userCredential.user.updateProfile({
+                displayName: displayName
+            });
+
+            closeModal('signupModal');
+            this.showNotification('Account created successfully!', 'success');
+        } catch (error) {
+            console.error('Signup error:', error);
+            this.showNotification(this.getErrorMessage(error.code), 'error');
+        }
+    }
+
+    // Get user-friendly error messages
+    getErrorMessage(errorCode) {
+        const errorMessages = {
+            'auth/user-not-found': 'No account found with this email',
+            'auth/wrong-password': 'Incorrect password',
+            'auth/email-already-in-use': 'An account with this email already exists',
+            'auth/weak-password': 'Password should be at least 6 characters',
+            'auth/invalid-email': 'Please enter a valid email address',
+            'auth/user-disabled': 'This account has been disabled',
+            'auth/too-many-requests': 'Too many failed attempts. Please try again later'
+        };
+        
+        return errorMessages[errorCode] || 'An error occurred. Please try again.';
+    }
+
+    // Firebase Logout
+    async handleLogout() {
+        if (this.auth) {
+            try {
+                await this.auth.signOut();
+                this.showNotification('Logged out successfully', 'success');
+            } catch (error) {
+                console.error('Logout error:', error);
+                this.showNotification('Error logging out', 'error');
+            }
+        } else {
+            // Demo logout
+            this.currentUser = null;
+            this.showNotification('Demo logout successful', 'success');
+            this.updateUIForLoggedOutUser();
+        }
+    }
+
+    // Update UI for logged in user
+    updateUIForLoggedInUser() {
+        if (this.currentUser) {
+            // Update navigation
+            const authButtons = document.querySelector('.auth-buttons');
+            if (authButtons) {
+                authButtons.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="${this.currentUser.avatar}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--primary-purple);">
+                        <span style="color: white; font-weight: 500;">${this.currentUser.displayName}</span>
+                        <button onclick="app.handleLogout()" class="btn-secondary">Logout</button>
+                    </div>
+                `;
+            }
+
+            // Update mobile menu
+            const mobileMenuButtons = document.querySelector('#mobileMenu button:last-of-type');
+            if (mobileMenuButtons) {
+                mobileMenuButtons.outerHTML = `
+                    <button onclick="app.handleLogout(); toggleMobileMenu();" class="btn-secondary" style="width: 100%; margin-top: 12px;">Logout</button>
+                `;
+            }
+
+            // Update profile section
+            this.renderProfile();
+        }
+    }
+
+    // Update UI for logged out user
+    updateUIForLoggedOutUser() {
+        // Update navigation
+        const authButtons = document.querySelector('.auth-buttons');
+        if (authButtons) {
+            authButtons.innerHTML = `
+                <button onclick="showLoginModal()" class="btn-secondary" style="margin-right: 12px;">
+                    Login
+                </button>
+                <button onclick="showSignupModal()" class="btn-primary">
+                    Sign Up
+                </button>
+            `;
+        }
+
+        // Update mobile menu
+        const mobileMenuButtons = document.querySelector('#mobileMenu button:last-of-type');
+        if (mobileMenuButtons) {
+            mobileMenuButtons.outerHTML = `
+                <button onclick="showLoginModal(); toggleMobileMenu();" class="btn-secondary" style="width: 100%; margin-top: 16px;">Login</button>
+                <button onclick="showSignupModal(); toggleMobileMenu();" class="btn-primary" style="width: 100%; margin-top: 12px;">Sign Up</button>
+            `;
+        }
+
+        // Update profile section
+        this.renderProfile();
     }
 
     // Load sample data
@@ -156,38 +381,11 @@ class PictoGramApp {
 
         // Form handlers
         window.handleLogin = (event) => {
-            event.preventDefault();
-            const email = event.target.querySelector('input[type="email"]').value;
-            const password = event.target.querySelector('input[type="password"]').value;
-            
-            // Simulate login
-            this.currentUser = {
-                username: email.split('@')[0],
-                email: email,
-                avatar: `https://picsum.photos/seed/${email}/120/120`
-            };
-            
-            closeModal('loginModal');
-            this.showNotification('Login successful! Welcome back!', 'success');
-            this.updateUIForLoggedInUser();
+            app.handleLogin(event);
         };
 
         window.handleSignup = (event) => {
-            event.preventDefault();
-            const displayName = event.target.querySelector('input[type="text"]').value;
-            const email = event.target.querySelector('input[type="email"]').value;
-            const password = event.target.querySelector('input[type="password"]').value;
-            
-            // Simulate signup
-            this.currentUser = {
-                username: displayName,
-                email: email,
-                avatar: `https://picsum.photos/seed/${email}/120/120`
-            };
-            
-            closeModal('signupModal');
-            this.showNotification('Account created successfully!', 'success');
-            this.updateUIForLoggedInUser();
+            app.handleSignup(event);
         };
     }
 
