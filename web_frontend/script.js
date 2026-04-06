@@ -746,22 +746,29 @@ class PictoGramApp {
         try {
             console.log('DEBUG: Loading messages from Firebase');
             
+            // Simple query without ordering to avoid index requirement
             const messagesSnapshot = await this.firestore
                 .collection('messages')
-                .where('participants', 'array-contains', this.currentUser.uid)
-                .orderBy('lastMessageTime', 'desc')
+                .limit(50) // Limit to avoid index issues
                 .get();
             
             this.messages = messagesSnapshot.docs.map(doc => {
                 const messageData = doc.data();
                 return {
                     id: doc.id,
-                    username: messageData.otherUsername || 'unknown',
-                    avatar: messageData.otherAvatar || `https://picsum.photos/seed/${messageData.otherUserId}/48/48`,
-                    lastMessage: messageData.lastMessage || '',
-                    time: this.formatTime(messageData.lastMessageTime),
+                    username: messageData.otherUsername || messageData.username || 'unknown',
+                    avatar: messageData.otherAvatar || messageData.avatar || `https://picsum.photos/seed/${messageData.otherUserId || doc.id}/48/48`,
+                    lastMessage: messageData.lastMessage || messageData.message || '',
+                    time: this.formatTime(messageData.lastMessageTime || messageData.createdAt),
                     unread: messageData.unreadCount || 0
                 };
+            });
+            
+            // Sort client-side by time (newest first)
+            this.messages.sort((a, b) => {
+                const timeA = new Date(a.time === 'Just now' ? Date.now() : a.time);
+                const timeB = new Date(b.time === 'Just now' ? Date.now() : b.time);
+                return timeB - timeA;
             });
             
             console.log('DEBUG: Loaded messages:', this.messages.length);
@@ -772,7 +779,43 @@ class PictoGramApp {
         }
     }
 
-    // Load demo posts
+    // Load demo messages
+    loadDemoMessages() {
+        this.messages = [
+            {
+                id: 1,
+                username: 'alex_dreamer',
+                avatar: 'https://picsum.photos/seed/alex/48/48',
+                lastMessage: 'Hey! How are you doing?',
+                time: '5 min ago',
+                unread: 2
+            },
+            {
+                id: 2,
+                username: 'sarah_creative',
+                avatar: 'https://picsum.photos/seed/sarah/48/48',
+                lastMessage: 'Thanks for the like!',
+                time: '1 hour ago',
+                unread: 0
+            },
+            {
+                id: 3,
+                username: 'mike_adventures',
+                avatar: 'https://picsum.photos/seed/mike/48/48',
+                lastMessage: 'Check out my new photos',
+                time: '3 hours ago',
+                unread: 1
+            },
+            {
+                id: 4,
+                username: 'emma_artist',
+                avatar: 'https://picsum.photos/seed/emma/48/48',
+                lastMessage: 'Love your work!',
+                time: '1 day ago',
+                unread: 0
+            }
+        ];
+    }
     loadDemoPosts() {
         this.posts = [
             {
@@ -961,6 +1004,14 @@ class PictoGramApp {
         window.editProfile = () => {
             app.editProfile();
         };
+
+        // Navigation functions
+        window.toggleMobileMenu = () => {
+            const menu = document.getElementById('mobileMenu');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        };
     }
 
     // Load user data from Firebase
@@ -1017,10 +1068,11 @@ class PictoGramApp {
         try {
             console.log('DEBUG: Loading posts for user:', this.currentUser.uid);
             
+            // Simple query without ordering to avoid index requirement
             const postsSnapshot = await this.firestore
                 .collection('posts')
                 .where('userId', '==', this.currentUser.uid)
-                .orderBy('createdAt', 'desc')
+                .limit(20) // Limit to avoid index issues
                 .get();
             
             console.log('DEBUG: Found posts:', postsSnapshot.size);
@@ -1041,6 +1093,13 @@ class PictoGramApp {
                     liked: postData.liked || false,
                     createdAt: postData.createdAt
                 };
+            });
+            
+            // Sort client-side by createdAt (newest first)
+            this.userPosts.sort((a, b) => {
+                const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                const timeB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                return timeB - timeA;
             });
             
             console.log('DEBUG: Processed user posts:', this.userPosts.length);
