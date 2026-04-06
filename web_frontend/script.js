@@ -38,12 +38,12 @@ class PictoGramApp {
         this.initializeFirebase();
         
         // Wait for Firebase to initialize
-        this.waitForFirebase().then(() => {
+        this.waitForFirebase().then(async () => {
             // Setup auth listener
             this.setupAuthListener();
             
             // Load sample data (will be replaced with real data)
-            this.loadSampleData();
+            await this.loadSampleData();
             this.setupEventListeners();
             this.setupPostActions();
             this.renderPosts();
@@ -687,7 +687,93 @@ class PictoGramApp {
     }
 
     // Load sample data
-    loadSampleData() {
+    async loadSampleData() {
+        if (this.firestore) {
+            // Load real posts from Firebase
+            await this.loadAllPosts();
+            await this.loadAllMessages();
+        } else {
+            // Use demo data
+            this.loadDemoPosts();
+            this.loadDemoMessages();
+        }
+    }
+
+    // Load all posts from Firebase
+    async loadAllPosts() {
+        if (!this.firestore) return;
+        
+        try {
+            console.log('DEBUG: Loading all posts from Firebase');
+            
+            const postsSnapshot = await this.firestore
+                .collection('posts')
+                .orderBy('createdAt', 'desc')
+                .limit(20) // Load latest 20 posts
+                .get();
+            
+            console.log('DEBUG: Found total posts:', postsSnapshot.size);
+            
+            this.posts = postsSnapshot.docs.map(doc => {
+                const postData = doc.data();
+                return {
+                    id: doc.id,
+                    userId: postData.userId,
+                    username: postData.username || 'unknown_user',
+                    avatar: postData.avatar || `https://picsum.photos/seed/${postData.userId}/40/40`,
+                    image: postData.image || postData.imageUrl || `https://picsum.photos/seed/${doc.id}/400/400`,
+                    caption: postData.caption || postData.description || '',
+                    likes: postData.likes || 0,
+                    comments: postData.comments || 0,
+                    time: this.formatTime(postData.createdAt),
+                    liked: postData.liked || false,
+                    createdAt: postData.createdAt
+                };
+            });
+            
+            console.log('DEBUG: Processed all posts:', this.posts.length);
+            
+        } catch (error) {
+            console.error('Error loading all posts:', error);
+            this.loadDemoPosts();
+        }
+    }
+
+    // Load all messages from Firebase
+    async loadAllMessages() {
+        if (!this.firestore) return;
+        
+        try {
+            console.log('DEBUG: Loading messages from Firebase');
+            
+            const messagesSnapshot = await this.firestore
+                .collection('messages')
+                .where('participants', 'array-contains', this.currentUser.uid)
+                .orderBy('lastMessageTime', 'desc')
+                .get();
+            
+            this.messages = messagesSnapshot.docs.map(doc => {
+                const messageData = doc.data();
+                return {
+                    id: doc.id,
+                    username: messageData.otherUsername || 'unknown',
+                    avatar: messageData.otherAvatar || `https://picsum.photos/seed/${messageData.otherUserId}/48/48`,
+                    lastMessage: messageData.lastMessage || '',
+                    time: this.formatTime(messageData.lastMessageTime),
+                    unread: messageData.unreadCount || 0
+                };
+            });
+            
+            console.log('DEBUG: Loaded messages:', this.messages.length);
+            
+        } catch (error) {
+            console.error('Error loading messages:', error);
+            this.loadDemoMessages();
+        }
+    }
+
+    // Load demo posts
+    loadDemoPosts() {
         this.posts = [
             {
                 id: 1,
@@ -929,22 +1015,60 @@ class PictoGramApp {
         if (!this.firestore || !this.currentUser) return;
         
         try {
+            console.log('DEBUG: Loading posts for user:', this.currentUser.uid);
+            
             const postsSnapshot = await this.firestore
                 .collection('posts')
                 .where('userId', '==', this.currentUser.uid)
                 .orderBy('createdAt', 'desc')
                 .get();
             
-            this.userPosts = postsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
+            console.log('DEBUG: Found posts:', postsSnapshot.size);
+            
+            this.userPosts = postsSnapshot.docs.map(doc => {
+                const postData = doc.data();
+                console.log('DEBUG: Post data:', postData);
+                return {
+                    id: doc.id,
+                    userId: postData.userId || this.currentUser.uid,
+                    username: postData.username || this.currentUser.displayName.toLowerCase().replace(/\s+/g, '_'),
+                    avatar: postData.avatar || this.currentUser.avatar,
+                    image: postData.image || postData.imageUrl || `https://picsum.photos/seed/${doc.id}/400/400`,
+                    caption: postData.caption || postData.description || '',
+                    likes: postData.likes || 0,
+                    comments: postData.comments || 0,
+                    time: this.formatTime(postData.createdAt),
+                    liked: postData.liked || false,
+                    createdAt: postData.createdAt
+                };
+            });
+            
+            console.log('DEBUG: Processed user posts:', this.userPosts.length);
             
         } catch (error) {
             console.error('Error loading user posts:', error);
             // Use demo posts if Firebase fails
             this.loadDemoUserPosts();
         }
+    }
+
+    // Format timestamp
+    formatTime(timestamp) {
+        if (!timestamp) return 'Just now';
+        
+        const now = new Date();
+        const postTime = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const diffMs = now - postTime;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} minutes ago`;
+        if (diffHours < 24) return `${diffHours} hours ago`;
+        if (diffDays < 7) return `${diffDays} days ago`;
+        
+        return postTime.toLocaleDateString();
     }
 
     // Load demo user posts
