@@ -32,42 +32,31 @@
                         </h1>
                     </div>
                 </div>
-                
-                <!-- Desktop Navigation -->
-                <div class="desktop-nav" style="display: none;">
-                    <div style="display: flex; align-items: center; gap: 32px;">
-                        <a href="#home" class="nav-link" style="color: white; padding: 8px 12px; text-decoration: none; font-weight: 500; transition: color 0.3s;">Home</a>
-                        <a href="#features" class="nav-link" style="color: rgba(255,255,255,0.7); padding: 8px 12px; text-decoration: none; font-weight: 500; transition: color 0.3s;">Features</a>
-                        <a href="#explore" class="nav-link" style="color: rgba(255,255,255,0.7); padding: 8px 12px; text-decoration: none; font-weight: 500; transition: color 0.3s;">Explore</a>
-                        <a href="#messages" class="nav-link" style="color: rgba(255,255,255,0.7); padding: 8px 12px; text-decoration: none; font-weight: 500; transition: color 0.3s;">Messages</a>
-                        <a href="#profile" class="nav-link" style="color: rgba(255,255,255,0.7); padding: 8px 12px; text-decoration: none; font-weight: 500; transition: color 0.3s;">Profile</a>
-                    </div>
-                </div>
-                
-                <!-- Auth Buttons -->
-                <div class="auth-buttons" style="display: none;">
-                    <button onclick="showLoginModal()" class="btn-secondary" style="margin-right: 12px;">
-                        Login
-                    </button>
-                    <button onclick="showSignupModal()" class="btn-primary">
-                        Sign Up
-                    </button>
-                </div>
-                
-                <!-- Mobile menu button -->
-                <div class="mobile-menu-btn" style="display: block;">
-                    <button onclick="toggleMobileMenu()" style="background: none; border: none; color: rgba(255,255,255,0.7); padding: 8px; cursor: pointer;">
-                        <i class="fas fa-bars" style="font-size: 20px;"></i>
-                    </button>
+            </div>
+            
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#home" class="nav-link">Home</a>
+                <a href="#profile" class="nav-link">Profile</a>
+                <div class="auth-buttons">
+                    <button onclick="showLoginModal()" class="btn-secondary">Login</button>
+                    <button onclick="showSignupModal()" class="btn-primary">Sign Up</button>
                 </div>
             </div>
+            
+            <!-- Mobile Menu Button -->
+            <button onclick="toggleMobileMenu()" class="md:hidden" style="background: none; border: none; color: white; font-size: 24px;">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
         
-        <!-- Mobile Navigation -->
-        <div id="mobileMenu" class="hidden">
-            <div style="padding: 16px;">
-                <a href="#home" onclick="toggleMobileMenu()" style="color: white; display: block; padding: 12px; text-decoration: none; font-weight: 500;">Home</a>
-                <a href="#features" onclick="toggleMobileMenu()" style="color: rgba(255,255,255,0.7); display: block; padding: 12px; text-decoration: none; font-weight: 500;">Features</a>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="mobile-menu hidden">
+            <a href="#home" class="mobile-nav-link">Home</a>
+            <a href="#profile" class="mobile-nav-link">Profile</a>
+            <div class="mobile-auth-buttons">
+                <button onclick="showLoginModal()" class="btn-secondary">Login</button>
+                <button onclick="showSignupModal()" class="btn-primary">Sign Up</button>
                 <a href="#explore" onclick="toggleMobileMenu()" style="color: rgba(255,255,255,0.7); display: block; padding: 12px; text-decoration: none; font-weight: 500;">Explore</a>
                 <a href="#messages" onclick="toggleMobileMenu()" style="color: rgba(255,255,255,0.7); display: block; padding: 12px; text-decoration: none; font-weight: 500;">Messages</a>
                 <a href="#profile" onclick="toggleMobileMenu()" style="color: rgba(255,255,255,0.7); display: block; padding: 12px; text-decoration: none; font-weight: 500;">Profile</a>
@@ -81,8 +70,77 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section id="home" class="hero-section" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 80px 20px;">
+    <!-- Home Section (for logged-in users) -->
+    <section id="home" class="content-section" style="padding: 80px 20px; min-height: 100vh; display: none;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <!-- Welcome Header -->
+            <div style="text-align: center; margin-bottom: 48px;">
+                <h1 style="font-size: 36px; font-weight: 700; margin-bottom: 16px; color: white;">
+                    Welcome back to PictoGram!
+                </h1>
+                <p style="font-size: 20px; color: rgba(255,255,255,0.7);">
+                    Discover amazing content and share your moments
+                </p>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 48px;">
+                <div class="glass-card" style="text-align: center; padding: 32px;">
+                    <i class="fas fa-camera" style="font-size: 32px; color: var(--primary-purple); margin-bottom: 16px;"></i>
+                    <div id="userPostCount" style="font-size: 32px; font-weight: 700; color: white; margin-bottom: 8px;">0</div>
+                    <div style="color: rgba(255,255,255,0.7);">Posts</div>
+                </div>
+                <div class="glass-card" style="text-align: center; padding: 32px;">
+                    <i class="fas fa-users" style="font-size: 32px; color: var(--primary-purple); margin-bottom: 16px;"></i>
+                    <div id="userFollowersCount" style="font-size: 32px; font-weight: 700; color: white; margin-bottom: 8px;">0</div>
+                    <div style="color: rgba(255,255,255,0.7);">Followers</div>
+                </div>
+                <div class="glass-card" style="text-align: center; padding: 32px;">
+                    <i class="fas fa-heart" style="font-size: 32px; color: var(--primary-purple); margin-bottom: 16px;"></i>
+                    <div id="userLikesCount" style="font-size: 32px; font-weight: 700; color: white; margin-bottom: 8px;">0</div>
+                    <div style="color: rgba(255,255,255,0.7);">Likes Received</div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                <button onclick="createNewPost()" class="glass-card" style="padding: 24px; text-align: left; border: none; cursor: pointer; transition: all 0.3s;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <i class="fas fa-plus-circle" style="font-size: 24px; color: var(--primary-purple); margin-right: 12px;"></i>
+                        <span style="font-size: 18px; font-weight: 600; color: white;">Create New Post</span>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.7); font-size: 14px;">Share a photo or video with your followers</p>
+                </button>
+                
+                <button onclick="viewMessages()" class="glass-card" style="padding: 24px; text-align: left; border: none; cursor: pointer; transition: all 0.3s;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <i class="fas fa-envelope" style="font-size: 24px; color: var(--primary-purple); margin-right: 12px;"></i>
+                        <span style="font-size: 18px; font-weight: 600; color: white;">Check Messages</span>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.7); font-size: 14px;">See what your friends are saying</p>
+                </button>
+                
+                <button onclick="editProfile()" class="glass-card" style="padding: 24px; text-align: left; border: none; cursor: pointer; transition: all 0.3s;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <i class="fas fa-user-edit" style="font-size: 24px; color: var(--primary-purple); margin-right: 12px;"></i>
+                        <span style="font-size: 18px; font-weight: 600; color: white;">Edit Profile</span>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.7); font-size: 14px;">Update your profile information</p>
+                </button>
+            </div>
+            
+            <!-- Recent Activity Preview -->
+            <div style="margin-top: 48px;">
+                <h2 style="font-size: 24px; font-weight: 700; color: white; margin-bottom: 24px;">Your Recent Posts</h2>
+                <div id="recentPostsPreview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                    <!-- Recent posts will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Landing Section (for non-logged-in users) -->
+    <section id="landing" class="hero-section" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 80px 20px;">
         <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
             <h1 style="font-size: clamp(32px, 8vw, 64px); font-weight: 700; margin-bottom: 24px; line-height: 1.2;">
                 <span style="background: linear-gradient(135deg, #E0389A, #CC2299); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">

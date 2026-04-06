@@ -608,6 +608,15 @@ class PictoGramApp {
     // Update UI for logged in user
     updateUIForLoggedInUser() {
         if (this.currentUser) {
+            // Show home page, hide landing page
+            const homeSection = document.getElementById('home');
+            const landingSection = document.getElementById('landing');
+            const profileSection = document.getElementById('profile');
+            
+            if (homeSection) homeSection.style.display = 'block';
+            if (landingSection) landingSection.style.display = 'none';
+            if (profileSection) profileSection.style.display = 'none';
+            
             // Update navigation
             const authButtons = document.querySelector('.auth-buttons');
             if (authButtons) {
@@ -619,27 +628,43 @@ class PictoGramApp {
                     </div>
                 `;
             }
-
+            
             // Update mobile menu
-            const mobileMenuButtons = document.querySelector('#mobileMenu button:last-of-type');
-            if (mobileMenuButtons) {
-                mobileMenuButtons.outerHTML = `
-                    <button onclick="app.handleLogout(); toggleMobileMenu();" class="btn-secondary" style="width: 100%; margin-top: 12px;">Logout</button>
+            const mobileAuthButtons = document.querySelector('.mobile-auth-buttons');
+            if (mobileAuthButtons) {
+                mobileAuthButtons.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <img src="${this.currentUser.avatar}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--primary-purple);">
+                        <span style="color: white; font-weight: 500;">${this.currentUser.displayName}</span>
+                    </div>
+                    <button onclick="app.handleLogout()" class="btn-secondary" style="width: 100%; margin-top: 16px;">Logout</button>
                 `;
             }
-
-            // Update profile section
+            
+            // Load user data and render home page
+            this.loadUserData();
+            this.renderHomePage();
             this.renderProfile();
         }
     }
 
     // Update UI for logged out user
     updateUIForLoggedOutUser() {
-        // Update navigation
+        // Show landing page, hide home page
+        const homeSection = document.getElementById('home');
+        const landingSection = document.getElementById('landing');
+        const profileSection = document.getElementById('profile');
+        
+        if (homeSection) homeSection.style.display = 'none';
+        if (landingSection) landingSection.style.display = 'flex';
+        if (profileSection) profileSection.style.display = 'none';
+        
+        // Reset navigation
         const authButtons = document.querySelector('.auth-buttons');
         if (authButtons) {
             authButtons.innerHTML = `
-                <button onclick="showLoginModal()" class="btn-secondary" style="margin-right: 12px;">
+                <button onclick="showLoginModal()" class="btn-secondary">Login</button>
+                <button onclick="showSignupModal()" class="btn-primary">Sign Up</button>
                     Login
                 </button>
                 <button onclick="showSignupModal()" class="btn-primary">
@@ -837,24 +862,180 @@ class PictoGramApp {
         window.switchToPhoneSignup = () => {
             app.switchToPhoneSignup();
         };
+
+        // Home page action functions
+        window.createNewPost = () => {
+            app.createNewPost();
+        };
+
+        window.viewMessages = () => {
+            app.viewMessages();
+        };
+
+        window.editProfile = () => {
+            app.editProfile();
+        };
     }
 
-    // Update UI for logged in user
-    updateUIForLoggedInUser() {
-        if (this.currentUser) {
-            // Update navigation
-            const authButtons = document.querySelector('nav .hidden.md\\:block:last-child');
-            if (authButtons) {
-                authButtons.innerHTML = `
-                    <div class="flex items-center space-x-4">
-                        <span class="text-gray-300">Welcome, ${this.currentUser.username}!</span>
-                        <button onclick="logout()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                            Logout
-                        </button>
-                    </div>
-                `;
+    // Load user data from Firebase
+    async loadUserData() {
+        if (!this.auth || !this.currentUser) return;
+        
+        try {
+            // Load user profile from Firestore
+            const userDoc = await this.firestore.collection('users').doc(this.currentUser.uid).get();
+            
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                this.currentUser = { ...this.currentUser, ...userData };
+            } else {
+                // Create user profile if it doesn't exist
+                await this.firestore.collection('users').doc(this.currentUser.uid).set({
+                    displayName: this.currentUser.displayName,
+                    email: this.currentUser.email,
+                    avatar: this.currentUser.avatar,
+                    bio: '',
+                    followers: 0,
+                    following: 0,
+                    posts: 0,
+                    createdAt: new Date().toISOString()
+                });
             }
+            
+            // Load user's posts
+            await this.loadUserPosts();
+            
+        } catch (error) {
+            console.error('Error loading user data:', error);
+            // Use demo data if Firebase fails
+            this.loadDemoUserData();
         }
+    }
+
+    // Load demo user data
+    loadDemoUserData() {
+        this.currentUser = {
+            ...this.currentUser,
+            bio: 'Welcome to my PictoGram profile!',
+            followers: Math.floor(Math.random() * 1000) + 100,
+            following: Math.floor(Math.random() * 500) + 50,
+            posts: Math.floor(Math.random() * 50) + 5
+        };
+        this.loadDemoUserPosts();
+    }
+
+    // Load user's posts from Firebase
+    async loadUserPosts() {
+        if (!this.firestore || !this.currentUser) return;
+        
+        try {
+            const postsSnapshot = await this.firestore
+                .collection('posts')
+                .where('userId', '==', this.currentUser.uid)
+                .orderBy('createdAt', 'desc')
+                .get();
+            
+            this.userPosts = postsSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
+        } catch (error) {
+            console.error('Error loading user posts:', error);
+            // Use demo posts if Firebase fails
+            this.loadDemoUserPosts();
+        }
+    }
+
+    // Load demo user posts
+    loadDemoUserPosts() {
+        this.userPosts = [
+            {
+                id: 'demo1',
+                userId: this.currentUser.uid,
+                username: this.currentUser.displayName.toLowerCase().replace(/\s+/g, '_'),
+                avatar: this.currentUser.avatar,
+                image: `https://picsum.photos/seed/${this.currentUser.uid}-post1/400/400`,
+                caption: 'My first post on PictoGram! 🎉',
+                likes: Math.floor(Math.random() * 100),
+                comments: Math.floor(Math.random() * 20),
+                time: 'Just now',
+                liked: false
+            },
+            {
+                id: 'demo2',
+                userId: this.currentUser.uid,
+                username: this.currentUser.displayName.toLowerCase().replace(/\s+/g, '_'),
+                avatar: this.currentUser.avatar,
+                image: `https://picsum.photos/seed/${this.currentUser.uid}-post2/400/400`,
+                caption: 'Living my best life! 🌟',
+                likes: Math.floor(Math.random() * 200),
+                comments: Math.floor(Math.random() * 30),
+                time: '2 hours ago',
+                liked: false
+            }
+        ];
+    }
+
+    // Render home page
+    renderHomePage() {
+        if (!this.currentUser) return;
+        
+        // Update stats
+        const postCount = document.getElementById('userPostCount');
+        const followersCount = document.getElementById('userFollowersCount');
+        const likesCount = document.getElementById('userLikesCount');
+        
+        if (postCount) postCount.textContent = this.userPosts?.length || 0;
+        if (followersCount) followersCount.textContent = this.currentUser.followers || 0;
+        if (likesCount) likesCount.textContent = this.calculateTotalLikes();
+        
+        // Render recent posts preview
+        this.renderRecentPostsPreview();
+    }
+
+    // Calculate total likes received
+    calculateTotalLikes() {
+        if (!this.userPosts) return 0;
+        return this.userPosts.reduce((total, post) => total + (post.likes || 0), 0);
+    }
+
+    // Render recent posts preview
+    renderRecentPostsPreview() {
+        const previewContainer = document.getElementById('recentPostsPreview');
+        if (!previewContainer) return;
+        
+        const recentPosts = this.userPosts?.slice(0, 3) || [];
+        
+        if (recentPosts.length === 0) {
+            previewContainer.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 48px; background: rgba(255,255,255,0.05); border-radius: 16px;">
+                    <i class="fas fa-camera" style="font-size: 48px; color: rgba(255,255,255,0.3); margin-bottom: 16px; display: block;"></i>
+                    <p style="color: rgba(255,255,255,0.7); margin-bottom: 24px;">You haven't posted anything yet</p>
+                    <button onclick="createNewPost()" class="btn-primary">Create Your First Post</button>
+                </div>
+            `;
+            return;
+        }
+        
+        previewContainer.innerHTML = recentPosts.map(post => this.renderPostCard(post)).join('');
+    }
+
+    // Home page action functions
+    createNewPost() {
+        this.showNotification('Post creation coming soon!', 'info');
+    }
+
+    viewMessages() {
+        // Navigate to messages section
+        const messagesSection = document.getElementById('messages');
+        if (messagesSection) {
+            messagesSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    editProfile() {
+        this.showNotification('Profile editing coming soon!', 'info');
     }
 
     // Render posts
