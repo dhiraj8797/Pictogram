@@ -16,7 +16,7 @@ class ShareService {
       }
       
       // Add app deep link or placeholder
-      final deepLink = appDeepLink ?? 'https://pictogram.app/post/${post.postId}';
+      final deepLink = appDeepLink ?? 'https://pictogram.online/post/${post.postId}';
       shareText += 'View post on PictoGram: $deepLink';
       
       // Add hashtags
@@ -29,7 +29,7 @@ class ShareService {
       );
     } catch (e) {
       // Fallback to clipboard if share fails
-      final fallbackText = 'Post by ${post.displayName}: ${post.caption}\n\nView on PictoGram: ${appDeepLink ?? 'https://pictogram.app/post/${post.postId}'}';
+      final fallbackText = 'Post by ${post.displayName}: ${post.caption}\n\nView on PictoGram: ${appDeepLink ?? 'https://pictogram.online/post/${post.postId}'}';
       await Clipboard.setData(ClipboardData(text: fallbackText));
       
       // Note: In a real implementation, you'd show a snackbar here
@@ -39,7 +39,7 @@ class ShareService {
   
   static Future<void> shareProfile(String userId, String displayName, {String? appDeepLink}) async {
     try {
-      final deepLink = appDeepLink ?? 'https://pictogram.app/user/$userId';
+      final deepLink = appDeepLink ?? 'https://pictogram.online/user/$userId';
       final shareText = 'Follow $displayName on PictoGram!\n\n$deepLink\n\n#PictoGram #SocialMedia';
       
       await Share.share(
@@ -47,14 +47,14 @@ class ShareService {
         subject: 'Follow $displayName on PictoGram!',
       );
     } catch (e) {
-      final fallbackText = 'Follow $displayName on PictoGram!\n\n${appDeepLink ?? 'https://pictogram.app/user/$userId'}';
+      final fallbackText = 'Follow $displayName on PictoGram!\n\n${appDeepLink ?? 'https://pictogram.online/user/$userId'}';
       await Clipboard.setData(ClipboardData(text: fallbackText));
     }
   }
   
   static Future<void> shareApp({String? appDeepLink}) async {
     try {
-      final deepLink = appDeepLink ?? 'https://pictogram.app';
+      final deepLink = appDeepLink ?? 'https://pictogram.online';
       final shareText = 'Download PictoGram - Amazing social media app!\n\n$deepLink\n\n#PictoGram #SocialMedia #PhotoSharing';
       
       await Share.share(
@@ -62,7 +62,7 @@ class ShareService {
         subject: 'Download PictoGram!',
       );
     } catch (e) {
-      final fallbackText = 'Download PictoGram - Amazing social media app!\n\n${appDeepLink ?? 'https://pictogram.app'}';
+      final fallbackText = 'Download PictoGram - Amazing social media app!\n\n${appDeepLink ?? 'https://pictogram.online'}';
       await Clipboard.setData(ClipboardData(text: fallbackText));
     }
   }
