@@ -17,28 +17,43 @@ class PictoGramApp {
         this.init();
     }
 
-    async init() {
+    // Setup smooth scrolling
+    setupSmoothScrolling() {
+        // Add smooth scroll behavior for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href').substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    }
+
+    init() {
         // Initialize Firebase
         this.initializeFirebase();
         
         // Wait for Firebase to initialize
-        await this.waitForFirebase();
-        
-        // Setup auth listener
-        this.setupAuthListener();
-        
-        // Load sample data (will be replaced with real data)
-        this.loadSampleData();
-        this.setupEventListeners();
-        this.setupPostActions();
-        this.renderPosts();
-        this.renderMessages();
-        this.setupSmoothScrolling();
+        this.waitForFirebase().then(() => {
+            // Setup auth listener
+            this.setupAuthListener();
+            
+            // Load sample data (will be replaced with real data)
+            this.loadSampleData();
+            this.setupEventListeners();
+            this.setupPostActions();
+            this.renderPosts();
+            this.renderMessages();
+            this.setupSmoothScrolling();
+        });
     }
 
     // Initialize Firebase with your app's configuration
     initializeFirebase() {
-        // TODO: Replace with your actual Firebase config from your Flutter app
+        // Check if Firebase config has real values
         const firebaseConfig = {
             apiKey: "your-api-key-here",
             authDomain: "your-project-id.firebaseapp.com",
@@ -48,6 +63,16 @@ class PictoGramApp {
             appId: "your-app-id"
         };
 
+        // Check if using placeholder config
+        const isPlaceholderConfig = firebaseConfig.apiKey === "your-api-key-here";
+        
+        if (isPlaceholderConfig) {
+            console.log('Firebase not configured - using demo mode');
+            this.auth = null;
+            this.firestore = null;
+            return;
+        }
+
         try {
             firebase.initializeApp(firebaseConfig);
             this.auth = firebase.auth();
@@ -55,8 +80,9 @@ class PictoGramApp {
             console.log('Firebase initialized successfully');
         } catch (error) {
             console.error('Firebase initialization error:', error);
-            // For demo purposes, continue without Firebase
-            this.showNotification('Firebase not configured - using demo mode', 'info');
+            // Fall back to demo mode
+            this.auth = null;
+            this.firestore = null;
         }
     }
 
