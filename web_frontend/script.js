@@ -1041,6 +1041,35 @@ class PictoGramApp {
                 menu.classList.toggle('hidden');
             }
         };
+
+        // Post interaction functions
+        window.likePost = (postId) => {
+            app.likePost(postId);
+        };
+
+        window.commentPost = (postId) => {
+            app.commentPost(postId);
+        };
+
+        window.sharePost = (postId) => {
+            app.sharePost(postId);
+        };
+
+        window.savePost = (postId) => {
+            app.savePost(postId);
+        };
+
+        window.showPostOptions = (postId) => {
+            app.showPostOptions(postId);
+        };
+
+        window.viewComments = (postId) => {
+            app.viewComments(postId);
+        };
+
+        window.followUser = (username) => {
+            app.followUser(username);
+        };
     }
 
     // Load user data from Firebase
@@ -1200,17 +1229,185 @@ class PictoGramApp {
     renderHomePage() {
         if (!this.currentUser) return;
         
-        // Update stats
-        const postCount = document.getElementById('userPostCount');
-        const followersCount = document.getElementById('userFollowersCount');
-        const likesCount = document.getElementById('userLikesCount');
+        // Update sidebar with user info
+        this.updateSidebar();
         
-        if (postCount) postCount.textContent = this.userPosts?.length || 0;
-        if (followersCount) followersCount.textContent = this.currentUser.followers || 0;
-        if (likesCount) likesCount.textContent = this.calculateTotalLikes();
+        // Render posts feed
+        this.renderPostsFeed();
         
-        // Render recent posts preview
-        this.renderRecentPostsPreview();
+        // Render suggestions
+        this.renderSuggestions();
+    }
+
+    // Update sidebar with user info
+    updateSidebar() {
+        const sidebarAvatar = document.getElementById('sidebarAvatar');
+        const sidebarUsername = document.getElementById('sidebarUsername');
+        const sidebarFullname = document.getElementById('sidebarFullname');
+        
+        if (sidebarAvatar) sidebarAvatar.src = this.currentUser.avatar;
+        if (sidebarUsername) sidebarUsername.textContent = this.currentUser.displayName.toLowerCase().replace(/\s+/g, '_');
+        if (sidebarFullname) sidebarFullname.textContent = this.currentUser.displayName;
+    }
+
+    // Render posts feed in Instagram style
+    renderPostsFeed() {
+        const postsFeed = document.getElementById('postsFeed');
+        if (!postsFeed) return;
+        
+        // Combine all posts (user's posts + other posts) and sort by time
+        const allPosts = [...(this.userPosts || []), ...(this.posts || [])];
+        
+        // Sort by newest first
+        allPosts.sort((a, b) => {
+            const timeA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+            const timeB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+            return timeB - timeA;
+        });
+        
+        if (allPosts.length === 0) {
+            postsFeed.innerHTML = `
+                <div style="background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; padding: 60px 20px; text-align: center;">
+                    <i class="fas fa-camera" style="font-size: 48px; color: #8e8e8e; margin-bottom: 16px; display: block;"></i>
+                    <h3 style="color: white; margin-bottom: 8px;">Start sharing your moments</h3>
+                    <p style="color: #8e8e8e; margin-bottom: 20px;">When you share photos, they will appear on your profile.</p>
+                    <button onclick="createNewPost()" style="background: #0095f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        Share your first photo
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        postsFeed.innerHTML = allPosts.map(post => this.renderInstagramPost(post)).join('');
+    }
+
+    // Render individual Instagram-style post
+    renderInstagramPost(post) {
+        return `
+            <div style="background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; margin-bottom: 24px;">
+                <!-- Post Header -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="${post.avatar}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                        <div>
+                            <p style="color: white; font-weight: 600; margin: 0; font-size: 14px;">${post.username}</p>
+                            <p style="color: white; margin: 0; font-size: 14px;">•</p>
+                        </div>
+                    </div>
+                    <button onclick="showPostOptions('${post.id}')" style="background: none; border: none; color: white; cursor: pointer;">
+                        <i class="fas fa-ellipsis-h"></i>
+                    </button>
+                </div>
+                
+                <!-- Post Image -->
+                <div style="width: 100%; max-height: 600px; overflow: hidden;">
+                    <img src="${post.image}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                
+                <!-- Post Actions -->
+                <div style="padding: 8px 16px;">
+                    <div style="display: flex; gap: 16px; margin-bottom: 8px;">
+                        <button onclick="likePost('${post.id}')" style="background: none; border: none; color: white; cursor: pointer;">
+                            <i class="${post.liked ? 'fas' : 'far'} fa-heart" style="font-size: 24px;"></i>
+                        </button>
+                        <button onclick="commentPost('${post.id}')" style="background: none; border: none; color: white; cursor: pointer;">
+                            <i class="far fa-comment" style="font-size: 24px;"></i>
+                        </button>
+                        <button onclick="sharePost('${post.id}')" style="background: none; border: none; color: white; cursor: pointer;">
+                            <i class="far fa-paper-plane" style="font-size: 24px;"></i>
+                        </button>
+                        <button onclick="savePost('${post.id}')" style="background: none; border: none; color: white; cursor: pointer; margin-left: auto;">
+                            <i class="far fa-bookmark" style="font-size: 24px;"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Likes -->
+                    <p style="color: white; font-weight: 600; margin-bottom: 8px;">${post.likes.toLocaleString()} likes</p>
+                    
+                    <!-- Caption -->
+                    <div style="margin-bottom: 8px;">
+                        <span style="color: white; font-weight: 600; margin-right: 8px;">${post.username}</span>
+                        <span style="color: white;">${post.caption}</span>
+                    </div>
+                    
+                    <!-- Comments -->
+                    ${post.comments > 0 ? `<button onclick="viewComments('${post.id}')" style="background: none; border: none; color: #8e8e8e; cursor: pointer; font-size: 14px; padding: 0; margin-bottom: 8px;">View all ${post.comments} comments</button>` : ''}
+                    
+                    <!-- Time -->
+                    <p style="color: #8e8e8e; font-size: 10px; margin: 0;">${post.time}</p>
+                </div>
+                
+                <!-- Add Comment -->
+                <div style="padding: 0 16px 16px; border-top: 1px solid #2c2c2c; margin-top: 4px;">
+                    <input type="text" placeholder="Add a comment..." style="background: none; border: none; color: white; width: 100%; padding: 8px 0; outline: none;">
+                </div>
+            </div>
+        `;
+    }
+
+    // Render suggestions
+    renderSuggestions() {
+        const suggestionsList = document.getElementById('suggestionsList');
+        if (!suggestionsList) return;
+        
+        // Sample suggestions - in real app, this would come from Firebase
+        const suggestions = [
+            { username: 'alex_dreamer', avatar: 'https://picsum.photos/seed/alex/32/32', mutualFollowers: 12 },
+            { username: 'sarah_creative', avatar: 'https://picsum.photos/seed/sarah/32/32', mutualFollowers: 8 },
+            { username: 'mike_adventures', avatar: 'https://picsum.photos/seed/mike/32/32', mutualFollowers: 15 },
+            { username: 'emma_artist', avatar: 'https://picsum.photos/seed/emma/32/32', mutualFollowers: 6 },
+            { username: 'john_photographer', avatar: 'https://picsum.photos/seed/john/32/32', mutualFollowers: 3 }
+        ];
+        
+        suggestionsList.innerHTML = suggestions.map(suggestion => `
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <img src="${suggestion.avatar}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                    <div>
+                        <p style="color: white; font-weight: 600; margin: 0; font-size: 14px;">${suggestion.username}</p>
+                        <p style="color: #8e8e8e; font-size: 12px; margin: 0;">Suggested for you</p>
+                    </div>
+                </div>
+                <button onclick="followUser('${suggestion.username}')" style="background: none; border: none; color: #0095f6; font-size: 12px; font-weight: 600; cursor: pointer;">
+                    Follow
+                </button>
+            </div>
+        `).join('');
+    }
+
+    // Post interaction functions
+    likePost(postId) {
+        const post = this.posts.find(p => p.id === postId) || this.userPosts?.find(p => p.id === postId);
+        if (post) {
+            post.liked = !post.liked;
+            post.likes += post.liked ? 1 : -1;
+            this.renderPostsFeed();
+        }
+    }
+
+    commentPost(postId) {
+        this.showNotification('Comments feature coming soon!', 'info');
+    }
+
+    sharePost(postId) {
+        this.showNotification('Share feature coming soon!', 'info');
+    }
+
+    savePost(postId) {
+        this.showNotification('Save feature coming soon!', 'info');
+    }
+
+    showPostOptions(postId) {
+        this.showNotification('Post options coming soon!', 'info');
+    }
+
+    viewComments(postId) {
+        this.showNotification('Comments view coming soon!', 'info');
+    }
+
+    followUser(username) {
+        this.showNotification(`Following ${username}!`, 'success');
     }
 
     // Calculate total likes received

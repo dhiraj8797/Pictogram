@@ -71,69 +71,105 @@
     </nav>
 
     <!-- Home Section (for logged-in users) -->
-    <section id="home" class="content-section" style="padding: 80px 20px; min-height: 100vh; display: none;">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <!-- Welcome Header -->
-            <div style="text-align: center; margin-bottom: 48px;">
-                <h1 style="font-size: 36px; font-weight: 700; margin-bottom: 16px; color: white;">
-                    Welcome back to PictoGram!
-                </h1>
-                <p style="font-size: 20px; color: rgba(255,255,255,0.7);">
-                    Discover amazing content and share your moments
-                </p>
-            </div>
-            
-            <!-- Quick Stats -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 48px;">
-                <div class="glass-card" style="text-align: center; padding: 32px;">
-                    <i class="fas fa-camera" style="font-size: 32px; color: var(--primary-purple); margin-bottom: 16px;"></i>
-                    <div id="userPostCount" style="font-size: 32px; font-weight: 700; color: white; margin-bottom: 8px;">0</div>
-                    <div style="color: rgba(255,255,255,0.7);">Posts</div>
-                </div>
-                <div class="glass-card" style="text-align: center; padding: 32px;">
-                    <i class="fas fa-users" style="font-size: 32px; color: var(--primary-purple); margin-bottom: 16px;"></i>
-                    <div id="userFollowersCount" style="font-size: 32px; font-weight: 700; color: white; margin-bottom: 8px;">0</div>
-                    <div style="color: rgba(255,255,255,0.7);">Followers</div>
-                </div>
-                <div class="glass-card" style="text-align: center; padding: 32px;">
-                    <i class="fas fa-heart" style="font-size: 32px; color: var(--primary-purple); margin-bottom: 16px;"></i>
-                    <div id="userLikesCount" style="font-size: 32px; font-weight: 700; color: white; margin-bottom: 8px;">0</div>
-                    <div style="color: rgba(255,255,255,0.7);">Likes Received</div>
-                </div>
-            </div>
-            
-            <!-- Quick Actions -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
-                <button onclick="createNewPost()" class="glass-card" style="padding: 24px; text-align: left; border: none; cursor: pointer; transition: all 0.3s;">
-                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                        <i class="fas fa-plus-circle" style="font-size: 24px; color: var(--primary-purple); margin-right: 12px;"></i>
-                        <span style="font-size: 18px; font-weight: 600; color: white;">Create New Post</span>
-                    </div>
-                    <p style="color: rgba(255,255,255,0.7); font-size: 14px;">Share a photo or video with your followers</p>
-                </button>
+    <section id="home" class="content-section" style="padding: 20px 0; min-height: 100vh; display: none; background: #000;">
+        <div style="max-width: 935px; margin: 0 auto; padding: 0 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 320px; gap: 30px;">
                 
-                <button onclick="viewMessages()" class="glass-card" style="padding: 24px; text-align: left; border: none; cursor: pointer; transition: all 0.3s;">
-                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                        <i class="fas fa-envelope" style="font-size: 24px; color: var(--primary-purple); margin-right: 12px;"></i>
-                        <span style="font-size: 18px; font-weight: 600; color: white;">Check Messages</span>
+                <!-- Main Feed -->
+                <div>
+                    <!-- Stories Section -->
+                    <div style="background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; padding: 16px 0; margin-bottom: 24px;">
+                        <div style="display: flex; gap: 12px; overflow-x: auto; padding: 0 16px;">
+                            <!-- Add Your Story -->
+                            <div style="flex-shrink: 0; text-align: center; cursor: pointer;">
+                                <div style="width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 2px; margin-bottom: 4px;">
+                                    <div style="width: 100%; height: 100%; border-radius: 50%; background: #262626; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-plus" style="color: white; font-size: 20px;"></i>
+                                    </div>
+                                </div>
+                                <p style="color: white; font-size: 12px; margin: 0;">Your story</p>
+                            </div>
+                            
+                            <!-- Sample Stories -->
+                            <div style="flex-shrink: 0; text-align: center; cursor: pointer;">
+                                <div style="width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 2px; margin-bottom: 4px;">
+                                    <img src="https://picsum.photos/seed/story1/66/66" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                </div>
+                                <p style="color: white; font-size: 12px; margin: 0;">alex_dreamer</p>
+                            </div>
+                            
+                            <div style="flex-shrink: 0; text-align: center; cursor: pointer;">
+                                <div style="width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 2px; margin-bottom: 4px;">
+                                    <img src="https://picsum.photos/seed/story2/66/66" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                </div>
+                                <p style="color: white; font-size: 12px; margin: 0;">sarah_creative</p>
+                            </div>
+                            
+                            <div style="flex-shrink: 0; text-align: center; cursor: pointer;">
+                                <div style="width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 2px; margin-bottom: 4px;">
+                                    <img src="https://picsum.photos/seed/story3/66/66" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                </div>
+                                <p style="color: white; font-size: 12px; margin: 0;">mike_adventures</p>
+                            </div>
+                            
+                            <div style="flex-shrink: 0; text-align: center; cursor: pointer;">
+                                <div style="width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); padding: 2px; margin-bottom: 4px;">
+                                    <img src="https://picsum.photos/seed/story4/66/66" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                </div>
+                                <p style="color: white; font-size: 12px; margin: 0;">emma_artist</p>
+                            </div>
+                        </div>
                     </div>
-                    <p style="color: rgba(255,255,255,0.7); font-size: 14px;">See what your friends are saying</p>
-                </button>
+                    
+                    <!-- Posts Feed -->
+                    <div id="postsFeed">
+                        <!-- Posts will be loaded here -->
+                    </div>
+                </div>
                 
-                <button onclick="editProfile()" class="glass-card" style="padding: 24px; text-align: left; border: none; cursor: pointer; transition: all 0.3s;">
-                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                        <i class="fas fa-user-edit" style="font-size: 24px; color: var(--primary-purple); margin-right: 12px;"></i>
-                        <span style="font-size: 18px; font-weight: 600; color: white;">Edit Profile</span>
+                <!-- Sidebar -->
+                <div>
+                    <!-- Profile Card -->
+                    <div style="background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                            <img id="sidebarAvatar" src="https://picsum.photos/seed/user/56/56" style="width: 56px; height: 56px; border-radius: 50%; object-fit: cover;">
+                            <div style="flex: 1;">
+                                <p id="sidebarUsername" style="color: white; font-weight: 600; margin: 0;">username</p>
+                                <p id="sidebarFullname" style="color: #8e8e8e; font-size: 14px; margin: 0;">Full Name</p>
+                            </div>
+                        </div>
+                        <button onclick="editProfile()" style="width: 100%; background: transparent; border: 1px solid #2c2c2c; color: white; padding: 8px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+                            Edit Profile
+                        </button>
                     </div>
-                    <p style="color: rgba(255,255,255,0.7); font-size: 14px;">Update your profile information</p>
-                </button>
-            </div>
-            
-            <!-- Recent Activity Preview -->
-            <div style="margin-top: 48px;">
-                <h2 style="font-size: 24px; font-weight: 700; color: white; margin-bottom: 24px;">Your Recent Posts</h2>
-                <div id="recentPostsPreview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
-                    <!-- Recent posts will be loaded here -->
+                    
+                    <!-- Suggestions -->
+                    <div style="background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; padding: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3 style="color: white; font-size: 14px; font-weight: 600; margin: 0;">Suggestions For You</h3>
+                            <a href="#" style="color: white; font-size: 12px; text-decoration: none;">See All</a>
+                        </div>
+                        
+                        <div id="suggestionsList">
+                            <!-- Suggestions will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Footer Links -->
+                    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #2c2c2c;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+                            <a href="#" style="color: #8e8e8e; font-size: 11px; text-decoration: none;">About</a>
+                            <a href="#" style="color: #8e8e8e; font-size: 11px; text-decoration: none;">Help</a>
+                            <a href="#" style="color: #8e8e8e; font-size: 11px; text-decoration: none;">Press</a>
+                            <a href="#" style="color: #8e8e8e; font-size: 11px; text-decoration: none;">API</a>
+                            <a href="#" style="color: #8e8e8e; font-size: 11px; text-decoration: none;">Jobs</a>
+                            <a href="#" style="color: #8e8e8e; font-size: 11px; text-decoration: none;">Privacy</a>
+                            <a href="#" style="color: #8e8e8e; font-size: 11px; text-decoration: none;">Terms</a>
+                            <a href="#" style="color: #8e8e8e; font-size: 11px; text-decoration: none;">Locations</a>
+                            <a href="#" style="color: #8e8e8e; font-size: 11px; text-decoration: none;">Language</a>
+                        </div>
+                        <p style="color: #8e8e8e; font-size: 11px; margin: 0;">© 2024 PICTOGRAM</p>
+                    </div>
                 </div>
             </div>
         </div>
