@@ -238,55 +238,168 @@
         </div>
     </footer>
 
-    <!-- Modals -->
+    <!-- Login Modal -->
     <div id="loginModal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h2 class="modal-title">Welcome Back</h2>
-            <form onsubmit="handleLogin(event)">
-                <div style="margin-bottom: 24px;">
-                    <label style="display: block; margin-bottom: 8px; color: rgba(255,255,255,0.9); font-weight: 500;">Email</label>
-                    <input type="email" required class="form-input" placeholder="Enter your email">
+        <div class="modal-content" style="max-width: 400px; width: 90%;">
+            <div style="padding: 24px 0;">
+                <!-- Title -->
+                <h2 style="color: white; font-size: 32px; font-weight: 700; text-align: center; margin-bottom: 8px;">
+                    Welcome Back
+                </h2>
+                <p style="color: rgba(255,255,255,0.7); font-size: 16px; text-align: center; margin-bottom: 40px;">
+                    Sign in to continue
+                </p>
+                
+                <!-- Email/Phone Toggle -->
+                <div style="display: flex; margin-bottom: 24px;">
+                    <div style="flex: 1;">
+                        <div id="emailToggle" onclick="switchToEmailLogin()" style="padding: 12px; background: rgba(255,255,255,0.1); border-radius: 8px; text-align: center; cursor: pointer;">
+                            <span id="emailToggleText" style="color: white; font-weight: 600;">Email</span>
+                        </div>
+                    </div>
+                    <div style="flex: 1;">
+                        <div id="phoneToggle" onclick="switchToPhoneLogin()" style="padding: 12px; background: transparent; border-radius: 8px; text-align: center; cursor: pointer;">
+                            <span id="phoneToggleText" style="color: rgba(255,255,255,0.5); font-weight: normal;">Phone</span>
+                        </div>
+                    </div>
                 </div>
-                <div style="margin-bottom: 32px;">
-                    <label style="display: block; margin-bottom: 8px; color: rgba(255,255,255,0.9); font-weight: 500;">Password</label>
-                    <input type="password" required class="form-input" placeholder="Enter your password">
+                
+                <!-- Error Message -->
+                <div id="loginError" class="error-message" style="display: none; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; padding: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">
+                        <i class="fas fa-exclamation-circle" style="color: #f87171; margin-right: 8px;"></i>
+                        <span id="loginErrorText" style="color: #f87171; font-size: 14px;"></span>
+                    </div>
                 </div>
-                <button type="submit" class="btn-primary" style="width: 100%;">
-                    <span>Login</span>
-                </button>
-            </form>
-            <div style="margin-top: 24px; text-align: center;">
-                <p style="color: rgba(255,255,255,0.7);">Don't have an account? <a href="#" onclick="switchToSignup()" style="color: #E0389A; text-decoration: none;">Sign up</a></p>
+                
+                <form onsubmit="handleLogin(event)">
+                    <!-- Email/Phone Field -->
+                    <div style="margin-bottom: 16px;">
+                        <div style="padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;">
+                            <div style="display: flex; align-items: center;">
+                                <i id="fieldIcon" class="fas fa-envelope" style="color: rgba(255,255,255,0.7); margin-right: 12px;"></i>
+                                <input type="email" id="emailField" required class="auth-input" placeholder="Enter your email" style="flex: 1; background: none; border: none; color: white; outline: none;">
+                                <input type="tel" id="phoneField" style="display: none; flex: 1; background: none; border: none; color: white; outline: none;" placeholder="Enter your phone number" maxlength="10">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Password Field (Email only) -->
+                    <div id="passwordField" style="margin-bottom: 8px;">
+                        <div style="padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;">
+                            <div style="display: flex; align-items: center;">
+                                <i class="fas fa-lock" style="color: rgba(255,255,255,0.7); margin-right: 12px;"></i>
+                                <input type="password" required class="auth-input" placeholder="Enter your password" style="flex: 1; background: none; border: none; color: white; outline: none;">
+                                <button type="button" onclick="togglePassword()" style="background: none; border: none; color: rgba(255,255,255,0.7); padding: 4px; cursor: pointer;">
+                                    <i id="passwordIcon" class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Forgot Password (Email only) -->
+                    <div id="forgotPassword" style="text-align: right; margin-bottom: 24px;">
+                        <button type="button" onclick="showForgotPassword()" style="background: none; border: none; color: var(--primary-purple); padding: 8px; cursor: pointer;">
+                            Forgot password?
+                        </button>
+                    </div>
+                    
+                    <!-- Login Button -->
+                    <div style="margin-bottom: 24px;">
+                        <button type="submit" id="loginButton" class="auth-button" style="width: 100%; height: 48px; background: #E0389A; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            <span id="loginButtonText">Login</span>
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Sign Up Link -->
+                <div style="text-align: center;">
+                    <span style="color: rgba(255,255,255,0.7);">Don't have an account? </span>
+                    <button onclick="switchToSignup()" style="background: none; border: none; color: var(--primary-purple); padding: 4px; cursor: pointer; font-weight: 500;">
+                        Sign up
+                    </button>
+                </div>
             </div>
+            
+            <!-- Close Button -->
             <button onclick="closeModal('loginModal')" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.7); font-size: 20px; cursor: pointer;">
                 <i class="fas fa-times"></i>
             </button>
         </div>
     </div>
 
+    <!-- Signup Modal -->
     <div id="signupModal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <h2 class="modal-title">Create Account</h2>
-            <form onsubmit="handleSignup(event)">
-                <div style="margin-bottom: 24px;">
-                    <label style="display: block; margin-bottom: 8px; color: rgba(255,255,255,0.9); font-weight: 500;">Display Name</label>
-                    <input type="text" required class="form-input" placeholder="Choose a username">
+        <div class="modal-content" style="max-width: 400px; width: 90%;">
+            <div style="padding: 24px 0;">
+                <!-- Title -->
+                <h2 style="color: white; font-size: 32px; font-weight: 700; text-align: center; margin-bottom: 8px;">
+                    Create Account
+                </h2>
+                <p style="color: rgba(255,255,255,0.7); font-size: 16px; text-align: center; margin-bottom: 40px;">
+                    Join PictoGram today
+                </p>
+                
+                <!-- Error Message -->
+                <div id="signupError" class="error-message" style="display: none; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; padding: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">
+                        <i class="fas fa-exclamation-circle" style="color: #f87171; margin-right: 8px;"></i>
+                        <span id="signupErrorText" style="color: #f87171; font-size: 14px;"></span>
+                    </div>
                 </div>
-                <div style="margin-bottom: 24px;">
-                    <label style="display: block; margin-bottom: 8px; color: rgba(255,255,255,0.9); font-weight: 500;">Email</label>
-                    <input type="email" required class="form-input" placeholder="Enter your email">
+                
+                <form onsubmit="handleSignup(event)">
+                    <!-- Display Name Field -->
+                    <div style="margin-bottom: 16px;">
+                        <div style="padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;">
+                            <div style="display: flex; align-items: center;">
+                                <i class="fas fa-user" style="color: rgba(255,255,255,0.7); margin-right: 12px;"></i>
+                                <input type="text" required class="auth-input" placeholder="Choose a username" style="flex: 1; background: none; border: none; color: white; outline: none;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Email Field -->
+                    <div style="margin-bottom: 16px;">
+                        <div style="padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;">
+                            <div style="display: flex; align-items: center;">
+                                <i class="fas fa-envelope" style="color: rgba(255,255,255,0.7); margin-right: 12px;"></i>
+                                <input type="email" required class="auth-input" placeholder="Enter your email" style="flex: 1; background: none; border: none; color: white; outline: none;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Password Field -->
+                    <div style="margin-bottom: 24px;">
+                        <div style="padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;">
+                            <div style="display: flex; align-items: center;">
+                                <i class="fas fa-lock" style="color: rgba(255,255,255,0.7); margin-right: 12px;"></i>
+                                <input type="password" id="signupPassword" required class="auth-input" placeholder="Create a password" style="flex: 1; background: none; border: none; color: white; outline: none;">
+                                <button type="button" onclick="toggleSignupPassword()" style="background: none; border: none; color: rgba(255,255,255,0.7); padding: 4px; cursor: pointer;">
+                                    <i id="signupPasswordIcon" class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sign Up Button -->
+                    <div style="margin-bottom: 24px;">
+                        <button type="submit" id="signupButton" class="auth-button" style="width: 100%; height: 48px; background: #E0389A; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            <span id="signupButtonText">Sign Up</span>
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Login Link -->
+                <div style="text-align: center;">
+                    <span style="color: rgba(255,255,255,0.7);">Already have an account? </span>
+                    <button onclick="switchToLogin()" style="background: none; border: none; color: var(--primary-purple); padding: 4px; cursor: pointer; font-weight: 500;">
+                        Login
+                    </button>
                 </div>
-                <div style="margin-bottom: 32px;">
-                    <label style="display: block; margin-bottom: 8px; color: rgba(255,255,255,0.9); font-weight: 500;">Password</label>
-                    <input type="password" required class="form-input" placeholder="Create a password">
-                </div>
-                <button type="submit" class="btn-primary" style="width: 100%;">
-                    <span>Sign Up</span>
-                </button>
-            </form>
-            <div style="margin-top: 24px; text-align: center;">
-                <p style="color: rgba(255,255,255,0.7);">Already have an account? <a href="#" onclick="switchToLogin()" style="color: #E0389A; text-decoration: none;">Login</a></p>
             </div>
+            
+            <!-- Close Button -->
             <button onclick="closeModal('signupModal')" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.7); font-size: 20px; cursor: pointer;">
                 <i class="fas fa-times"></i>
             </button>

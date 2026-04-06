@@ -6,6 +6,14 @@ class PictoGramApp {
         this.messages = [];
         this.auth = null;
         this.firestore = null;
+        
+        // Login screen state (matching app)
+        this.useEmailLogin = true;
+        this.obscurePassword = true;
+        this.obscureSignupPassword = true;
+        this.isLoading = false;
+        this.errorMessage = null;
+        
         this.init();
     }
 
@@ -78,36 +86,263 @@ class PictoGramApp {
         }
     }
 
+    // Login screen methods (matching app)
+    switchToEmailLogin() {
+        this.useEmailLogin = true;
+        this.updateLoginUI();
+    }
+
+    switchToPhoneLogin() {
+        this.useEmailLogin = false;
+        this.updateLoginUI();
+    }
+
+    togglePassword() {
+        this.obscurePassword = !this.obscurePassword;
+        this.updatePasswordVisibility();
+    }
+
+    toggleSignupPassword() {
+        this.obscureSignupPassword = !this.obscureSignupPassword;
+        this.updateSignupPasswordVisibility();
+    }
+
+    updateLoginUI() {
+        // Update toggle buttons
+        const emailToggle = document.getElementById('emailToggle');
+        const phoneToggle = document.getElementById('phoneToggle');
+        const emailText = document.getElementById('emailToggleText');
+        const phoneText = document.getElementById('phoneToggleText');
+        const fieldIcon = document.getElementById('fieldIcon');
+        const emailField = document.getElementById('emailField');
+        const phoneField = document.getElementById('phoneField');
+        const passwordField = document.getElementById('passwordField');
+        const forgotPassword = document.getElementById('forgotPassword');
+
+        if (this.useEmailLogin) {
+            // Email selected
+            emailToggle.style.background = 'rgba(255,255,255,0.1)';
+            phoneToggle.style.background = 'transparent';
+            emailText.style.color = 'white';
+            emailText.style.fontWeight = '600';
+            phoneText.style.color = 'rgba(255,255,255,0.5)';
+            phoneText.style.fontWeight = 'normal';
+            
+            fieldIcon.className = 'fas fa-envelope';
+            emailField.style.display = 'block';
+            phoneField.style.display = 'none';
+            emailField.required = true;
+            phoneField.required = false;
+            passwordField.style.display = 'block';
+            forgotPassword.style.display = 'block';
+        } else {
+            // Phone selected
+            emailToggle.style.background = 'transparent';
+            phoneToggle.style.background = 'rgba(255,255,255,0.1)';
+            emailText.style.color = 'rgba(255,255,255,0.5)';
+            emailText.style.fontWeight = 'normal';
+            phoneText.style.color = 'white';
+            phoneText.style.fontWeight = '600';
+            
+            fieldIcon.className = 'fas fa-phone';
+            emailField.style.display = 'none';
+            phoneField.style.display = 'block';
+            emailField.required = false;
+            phoneField.required = true;
+            passwordField.style.display = 'none';
+            forgotPassword.style.display = 'none';
+        }
+    }
+
+    updatePasswordVisibility() {
+        const passwordIcon = document.getElementById('passwordIcon');
+        const passwordInput = document.querySelector('#passwordField input[type="password"]');
+        
+        if (this.obscurePassword) {
+            passwordIcon.className = 'fas fa-eye';
+            passwordInput.type = 'password';
+        } else {
+            passwordIcon.className = 'fas fa-eye-slash';
+            passwordInput.type = 'text';
+        }
+    }
+
+    updateSignupPasswordVisibility() {
+        const passwordIcon = document.getElementById('signupPasswordIcon');
+        const passwordInput = document.getElementById('signupPassword');
+        
+        if (this.obscureSignupPassword) {
+            passwordIcon.className = 'fas fa-eye';
+            passwordInput.type = 'password';
+        } else {
+            passwordIcon.className = 'fas fa-eye-slash';
+            passwordInput.type = 'text';
+        }
+    }
+
+    showError(message, modalId) {
+        const errorDiv = document.getElementById(modalId + 'Error');
+        const errorText = document.getElementById(modalId + 'ErrorText');
+        
+        errorText.textContent = message;
+        errorDiv.style.display = 'block';
+        
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 3000);
+    }
+
+    hideError(modalId) {
+        const errorDiv = document.getElementById(modalId + 'Error');
+        errorDiv.style.display = 'none';
+    }
+
+    setLoading(loading, modalId) {
+        const button = document.getElementById(modalId + 'Button');
+        const buttonText = document.getElementById(modalId + 'ButtonText');
+        
+        this.isLoading = loading;
+        
+        if (loading) {
+            button.disabled = true;
+            buttonText.innerHTML = '<div class="loading-spinner"></div>';
+        } else {
+            button.disabled = false;
+            buttonText.textContent = modalId === 'login' ? 'Login' : 'Sign Up';
+        }
+    }
+
+    // Validation (matching app logic)
+    validateLoginForm(email, phone, password) {
+        if (this.useEmailLogin) {
+            if (!email) {
+                this.showError('Please enter your email', 'login');
+                return false;
+            }
+            if (!this.isValidEmail(email)) {
+                this.showError('Please enter a valid email', 'login');
+                return false;
+            }
+            if (!password) {
+                this.showError('Please enter your password', 'login');
+                return false;
+            }
+            if (password.length < 6) {
+                this.showError('Password must be at least 6 characters', 'login');
+                return false;
+            }
+        } else {
+            if (!phone) {
+                this.showError('Please enter your phone number', 'login');
+                return false;
+            }
+            if (!this.isValidPhone(phone)) {
+                this.showError('Please enter a valid 10-digit phone number', 'login');
+                return false;
+            }
+        }
+        return true;
+    }
+
+    validateSignupForm(displayName, email, password) {
+        if (!displayName) {
+            this.showError('Please choose a username', 'signup');
+            return false;
+        }
+        if (!email) {
+            this.showError('Please enter your email', 'signup');
+            return false;
+        }
+        if (!this.isValidEmail(email)) {
+            this.showError('Please enter a valid email', 'signup');
+            return false;
+        }
+        if (!password) {
+            this.showError('Please create a password', 'signup');
+            return false;
+        }
+        if (password.length < 6) {
+            this.showError('Password must be at least 6 characters', 'signup');
+            return false;
+        }
+        return true;
+    }
+
+    isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    isValidPhone(phone) {
+        return /^[0-9]{10}$/.test(phone);
+    }
     // Firebase Login
     async handleLogin(event) {
         event.preventDefault();
         
+        if (this.isLoading) return;
+        
+        // Hide previous errors
+        this.hideError('login');
+        
+        // Get form values
+        const emailField = document.getElementById('emailField');
+        const phoneField = document.getElementById('phoneField');
+        const passwordField = document.querySelector('#passwordField input[type="password"]');
+        
+        const email = emailField.value.trim();
+        const phone = phoneField.value.trim();
+        const password = passwordField.value.trim();
+        
+        // Validate inputs (matching app logic)
+        if (!this.validateLoginForm(email, phone, password)) {
+            return;
+        }
+        
+        // Set loading state
+        this.setLoading(true, 'login');
+        
         if (!this.auth) {
+            // Demo mode
             this.showNotification('Firebase not configured - using demo mode', 'info');
-            // Demo login
-            const email = event.target.querySelector('input[type="email"]').value;
-            this.currentUser = {
-                uid: 'demo-user',
-                email: email,
-                displayName: email.split('@')[0],
-                avatar: `https://picsum.photos/seed/${email}/120/120`
-            };
-            closeModal('loginModal');
-            this.showNotification('Demo login successful!', 'success');
-            this.updateUIForLoggedInUser();
+            
+            setTimeout(() => {
+                this.currentUser = {
+                    uid: 'demo-user',
+                    email: this.useEmailLogin ? email : `phone-${phone}@demo.com`,
+                    displayName: this.useEmailLogin ? email.split('@')[0] : `User${phone}`,
+                    avatar: `https://picsum.photos/seed/${this.useEmailLogin ? email : phone}/120/120`
+                };
+                
+                this.setLoading(false, 'login');
+                closeModal('loginModal');
+                this.showNotification('Demo login successful!', 'success');
+                this.updateUIForLoggedInUser();
+            }, 1500);
+            
             return;
         }
 
-        const email = event.target.querySelector('input[type="email"]').value;
-        const password = event.target.querySelector('input[type="password"]').value;
-
         try {
-            const userCredential = await this.auth.signInWithEmailAndPassword(email, password);
+            if (this.useEmailLogin) {
+                // Email login
+                const userCredential = await this.auth.signInWithEmailAndPassword(email, password);
+                console.log('Email login successful');
+            } else {
+                // Phone login - navigate to OTP (for now, show message)
+                this.showNotification('Phone login will redirect to OTP verification', 'info');
+                this.setLoading(false, 'login');
+                return;
+            }
+            
+            this.setLoading(false, 'login');
             closeModal('loginModal');
             this.showNotification('Login successful! Welcome back!', 'success');
+            
         } catch (error) {
             console.error('Login error:', error);
-            this.showNotification(this.getErrorMessage(error.code), 'error');
+            this.setLoading(false, 'login');
+            this.showError(this.getErrorMessage(error.code), 'login');
         }
     }
 
@@ -115,26 +350,44 @@ class PictoGramApp {
     async handleSignup(event) {
         event.preventDefault();
         
-        if (!this.auth) {
-            this.showNotification('Firebase not configured - using demo mode', 'info');
-            // Demo signup
-            const displayName = event.target.querySelector('input[type="text"]').value;
-            const email = event.target.querySelector('input[type="email"]').value;
-            this.currentUser = {
-                uid: 'demo-user',
-                email: email,
-                displayName: displayName,
-                avatar: `https://picsum.photos/seed/${email}/120/120`
-            };
-            closeModal('signupModal');
-            this.showNotification('Demo account created successfully!', 'success');
-            this.updateUIForLoggedInUser();
+        if (this.isLoading) return;
+        
+        // Hide previous errors
+        this.hideError('signup');
+        
+        // Get form values
+        const displayName = event.target.querySelector('input[type="text"]').value.trim();
+        const email = event.target.querySelector('input[type="email"]').value.trim();
+        const password = document.getElementById('signupPassword').value.trim();
+        
+        // Validate inputs
+        if (!this.validateSignupForm(displayName, email, password)) {
             return;
         }
-
-        const displayName = event.target.querySelector('input[type="text"]').value;
-        const email = event.target.querySelector('input[type="email"]').value;
-        const password = event.target.querySelector('input[type="password"]').value;
+        
+        // Set loading state
+        this.setLoading(true, 'signup');
+        
+        if (!this.auth) {
+            // Demo mode
+            this.showNotification('Firebase not configured - using demo mode', 'info');
+            
+            setTimeout(() => {
+                this.currentUser = {
+                    uid: 'demo-user',
+                    email: email,
+                    displayName: displayName,
+                    avatar: `https://picsum.photos/seed/${email}/120/120`
+                };
+                
+                this.setLoading(false, 'signup');
+                closeModal('signupModal');
+                this.showNotification('Demo account created successfully!', 'success');
+                this.updateUIForLoggedInUser();
+            }, 1500);
+            
+            return;
+        }
 
         try {
             const userCredential = await this.auth.createUserWithEmailAndPassword(email, password);
@@ -144,11 +397,14 @@ class PictoGramApp {
                 displayName: displayName
             });
 
+            this.setLoading(false, 'signup');
             closeModal('signupModal');
             this.showNotification('Account created successfully!', 'success');
+            
         } catch (error) {
             console.error('Signup error:', error);
-            this.showNotification(this.getErrorMessage(error.code), 'error');
+            this.setLoading(false, 'signup');
+            this.showError(this.getErrorMessage(error.code), 'signup');
         }
     }
 
@@ -386,6 +642,27 @@ class PictoGramApp {
 
         window.handleSignup = (event) => {
             app.handleSignup(event);
+        };
+
+        // Login screen functions (matching app)
+        window.switchToEmailLogin = () => {
+            app.switchToEmailLogin();
+        };
+
+        window.switchToPhoneLogin = () => {
+            app.switchToPhoneLogin();
+        };
+
+        window.togglePassword = () => {
+            app.togglePassword();
+        };
+
+        window.toggleSignupPassword = () => {
+            app.toggleSignupPassword();
+        };
+
+        window.showForgotPassword = () => {
+            app.showNotification('Password reset coming soon!', 'info');
         };
     }
 
