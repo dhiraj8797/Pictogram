@@ -9,6 +9,7 @@ class PictoGramApp {
         
         // Login screen state (matching app)
         this.useEmailLogin = true;
+        this.useEmailSignup = true;
         this.obscurePassword = true;
         this.obscureSignupPassword = true;
         this.isLoading = false;
@@ -131,6 +132,63 @@ class PictoGramApp {
     toggleSignupPassword() {
         this.obscureSignupPassword = !this.obscureSignupPassword;
         this.updateSignupPasswordVisibility();
+    }
+
+    switchToEmailSignup() {
+        this.useEmailSignup = true;
+        this.updateSignupUI();
+    }
+
+    switchToPhoneSignup() {
+        this.useEmailSignup = false;
+        this.updateSignupUI();
+    }
+
+    updateSignupUI() {
+        // Update toggle buttons
+        const emailToggle = document.getElementById('signupEmailToggle');
+        const phoneToggle = document.getElementById('signupPhoneToggle');
+        const emailText = document.getElementById('signupEmailToggleText');
+        const phoneText = document.getElementById('signupPhoneToggleText');
+        const fieldIcon = document.getElementById('signupFieldIcon');
+        const emailField = document.getElementById('signupEmailField');
+        const phoneField = document.getElementById('signupPhoneField');
+        const passwordField = document.getElementById('signupPasswordField');
+        const forgotPassword = document.getElementById('signupForgotPassword');
+
+        if (this.useEmailSignup) {
+            // Email selected
+            emailToggle.style.background = 'rgba(255,255,255,0.1)';
+            phoneToggle.style.background = 'transparent';
+            emailText.style.color = 'white';
+            emailText.style.fontWeight = '600';
+            phoneText.style.color = 'rgba(255,255,255,0.5)';
+            phoneText.style.fontWeight = 'normal';
+            
+            fieldIcon.className = 'fas fa-envelope';
+            emailField.style.display = 'block';
+            phoneField.style.display = 'none';
+            emailField.required = true;
+            phoneField.required = false;
+            passwordField.style.display = 'block';
+            forgotPassword.style.display = 'block';
+        } else {
+            // Phone selected
+            emailToggle.style.background = 'transparent';
+            phoneToggle.style.background = 'rgba(255,255,255,0.1)';
+            emailText.style.color = 'rgba(255,255,255,0.5)';
+            emailText.style.fontWeight = 'normal';
+            phoneText.style.color = 'white';
+            phoneText.style.fontWeight = '600';
+            
+            fieldIcon.className = 'fas fa-phone';
+            emailField.style.display = 'none';
+            phoneField.style.display = 'block';
+            emailField.required = false;
+            phoneField.required = true;
+            passwordField.style.display = 'none';
+            forgotPassword.style.display = 'none';
+        }
     }
 
     updateLoginUI() {
@@ -281,27 +339,56 @@ class PictoGramApp {
         return true;
     }
 
-    validateSignupForm(displayName, email, password) {
+    validateSignupForm(displayName, email, phone, password) {
+        console.log('DEBUG: validateSignupForm called', { 
+            useEmailSignup: this.useEmailSignup, 
+            displayName, 
+            email, 
+            phone, 
+            password: password.length > 0 
+        });
+        
         if (!displayName) {
+            console.log('DEBUG: Display name validation failed - empty');
             this.showError('Please choose a username', 'signup');
             return false;
         }
-        if (!email) {
-            this.showError('Please enter your email', 'signup');
-            return false;
+        
+        if (this.useEmailSignup) {
+            if (!email) {
+                console.log('DEBUG: Email validation failed - empty');
+                this.showError('Please enter your email', 'signup');
+                return false;
+            }
+            if (!this.isValidEmail(email)) {
+                console.log('DEBUG: Email validation failed - invalid format');
+                this.showError('Please enter a valid email', 'signup');
+                return false;
+            }
+            if (!password) {
+                console.log('DEBUG: Password validation failed - empty');
+                this.showError('Please create a password', 'signup');
+                return false;
+            }
+            if (password.length < 6) {
+                console.log('DEBUG: Password validation failed - too short');
+                this.showError('Password must be at least 6 characters', 'signup');
+                return false;
+            }
+        } else {
+            if (!phone) {
+                console.log('DEBUG: Phone validation failed - empty');
+                this.showError('Please enter your phone number', 'signup');
+                return false;
+            }
+            if (!this.isValidPhone(phone)) {
+                console.log('DEBUG: Phone validation failed - invalid format');
+                this.showError('Please enter a valid 10-digit phone number', 'signup');
+                return false;
+            }
         }
-        if (!this.isValidEmail(email)) {
-            this.showError('Please enter a valid email', 'signup');
-            return false;
-        }
-        if (!password) {
-            this.showError('Please create a password', 'signup');
-            return false;
-        }
-        if (password.length < 6) {
-            this.showError('Password must be at least 6 characters', 'signup');
-            return false;
-        }
+        
+        console.log('DEBUG: Signup validation passed');
         return true;
     }
 
@@ -410,10 +497,11 @@ class PictoGramApp {
         
         // Get form values
         const displayNameField = event.target.querySelector('input[type="text"]');
-        const emailField = event.target.querySelector('input[type="email"]');
+        const emailField = document.getElementById('signupEmailField');
+        const phoneField = document.getElementById('signupPhoneField');
         const passwordField = document.getElementById('signupPassword');
         
-        if (!displayNameField || !emailField || !passwordField) {
+        if (!displayNameField || !emailField || !phoneField || !passwordField) {
             console.error('Signup fields not found');
             this.showError('Form fields not found. Please refresh the page.', 'signup');
             return;
@@ -421,10 +509,20 @@ class PictoGramApp {
         
         const displayName = displayNameField.value.trim();
         const email = emailField.value.trim();
+        const phone = phoneField.value.trim();
         const password = passwordField.value.trim();
         
+        console.log('DEBUG: Signup form values:', { 
+            displayName: displayName.length > 0, 
+            email: email.length > 0, 
+            phone: phone.length > 0, 
+            password: password.length > 0,
+            useEmailSignup: this.useEmailSignup
+        });
+        
         // Validate inputs
-        if (!this.validateSignupForm(displayName, email, password)) {
+        if (!this.validateSignupForm(displayName, email, phone, password)) {
+            console.log('DEBUG: Signup validation failed');
             return;
         }
         
@@ -438,9 +536,9 @@ class PictoGramApp {
             setTimeout(() => {
                 this.currentUser = {
                     uid: 'demo-user',
-                    email: email,
+                    email: this.useEmailSignup ? email : `phone-${phone}@demo.com`,
                     displayName: displayName,
-                    avatar: `https://picsum.photos/seed/${email}/120/120`
+                    avatar: `https://picsum.photos/seed/${this.useEmailSignup ? email : phone}/120/120`
                 };
                 
                 this.setLoading(false, 'signup');
@@ -726,6 +824,15 @@ class PictoGramApp {
 
         window.showForgotPassword = () => {
             app.showNotification('Password reset coming soon!', 'info');
+        };
+
+        // Signup screen functions (matching app)
+        window.switchToEmailSignup = () => {
+            app.switchToEmailSignup();
+        };
+
+        window.switchToPhoneSignup = () => {
+            app.switchToPhoneSignup();
         };
     }
 

@@ -348,8 +348,20 @@
                     </div>
                 </div>
                 
+                <!-- Email/Phone Toggle -->
+                <div style="display: flex; background: rgba(255,255,255,0.06); border-radius: 12px; padding: 4px; margin-bottom: 24px;">
+                    <button id="signupEmailToggle" onclick="switchToEmailSignup()" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                        <i class="fas fa-envelope" style="margin-right: 8px;"></i>
+                        <span id="signupEmailToggleText">Email</span>
+                    </button>
+                    <button id="signupPhoneToggle" onclick="switchToPhoneSignup()" style="flex: 1; padding: 12px; background: transparent; border: none; border-radius: 8px; color: rgba(255,255,255,0.5); font-weight: normal; cursor: pointer; transition: all 0.3s;">
+                        <i class="fas fa-phone" style="margin-right: 8px;"></i>
+                        <span id="signupPhoneToggleText">Phone</span>
+                    </button>
+                </div>
+                
                 <form onsubmit="handleSignup(event)">
-                    <!-- Display Name Field -->
+                    <!-- Display Name Field (always shown) -->
                     <div style="margin-bottom: 16px;">
                         <div style="padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;">
                             <div style="display: flex; align-items: center;">
@@ -359,18 +371,19 @@
                         </div>
                     </div>
                     
-                    <!-- Email Field -->
+                    <!-- Email/Phone Field -->
                     <div style="margin-bottom: 16px;">
                         <div style="padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;">
                             <div style="display: flex; align-items: center;">
-                                <i class="fas fa-envelope" style="color: rgba(255,255,255,0.7); margin-right: 12px;"></i>
-                                <input type="email" required class="auth-input" placeholder="Enter your email" style="flex: 1; background: none; border: none; color: white; outline: none;">
+                                <i id="signupFieldIcon" class="fas fa-envelope" style="color: rgba(255,255,255,0.7); margin-right: 12px;"></i>
+                                <input type="email" id="signupEmailField" required class="auth-input" placeholder="Enter your email" style="flex: 1; background: none; border: none; color: white; outline: none;">
+                                <input type="tel" id="signupPhoneField" style="display: none; flex: 1; background: none; border: none; color: white; outline: none;" placeholder="Enter your phone number" maxlength="10">
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Password Field -->
-                    <div style="margin-bottom: 24px;">
+                    <!-- Password Field (Email only) -->
+                    <div id="signupPasswordField" style="margin-bottom: 8px;">
                         <div style="padding: 12px 16px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px;">
                             <div style="display: flex; align-items: center;">
                                 <i class="fas fa-lock" style="color: rgba(255,255,255,0.7); margin-right: 12px;"></i>
@@ -380,6 +393,13 @@
                                 </button>
                             </div>
                         </div>
+                    </div>
+                    
+                    <!-- Forgot Password (Email only) -->
+                    <div id="signupForgotPassword" style="text-align: right; margin-bottom: 24px;">
+                        <button type="button" onclick="showForgotPassword()" style="background: none; border: none; color: var(--primary-purple); padding: 4px; cursor: pointer; font-size: 14px;">
+                            Forgot password?
+                        </button>
                     </div>
                     
                     <!-- Sign Up Button -->
