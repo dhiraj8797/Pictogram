@@ -4,67 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PictoGram - Share Your Moments</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="styles.css" rel="stylesheet">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <meta name="description" content="PictoGram - Modern social media platform to share your moments, connect with friends, and discover amazing content">
+    <meta property="og:title" content="PictoGram - Share Your Moments">
+    <meta property="og:description" content="Modern social media platform with messaging, posts, and more">
+    <meta property="og:image" content="https://pictogram.online/og-image.jpg">
+    <meta property="og:url" content="https://pictogram.online">
+    <meta name="twitter:card" content="summary_large_image">
 </head>
-<body class="bg-gray-900 text-white">
+<body>
     <!-- Navigation -->
-    <nav class="fixed top-0 w-full bg-gray-900/95 backdrop-blur-lg z-50 border-b border-purple-500/20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+    <nav>
+        <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; height: 64px;">
                 <!-- Logo -->
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <div style="display: flex; align-items: center;">
+                    <div style="flex-shrink: 0;">
+                        <h1 style="font-size: 24px; font-weight: 700; background: linear-gradient(135deg, #E0389A, #CC2299); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
                             PictoGram
                         </h1>
                     </div>
                 </div>
                 
                 <!-- Desktop Navigation -->
-                <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-8">
-                        <a href="#home" class="nav-link text-white hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</a>
-                        <a href="#features" class="nav-link text-gray-300 hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Features</a>
-                        <a href="#explore" class="nav-link text-gray-300 hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Explore</a>
-                        <a href="#messages" class="nav-link text-gray-300 hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Messages</a>
-                        <a href="#profile" class="nav-link text-gray-300 hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
+                <div class="desktop-nav" style="display: none;">
+                    <div style="display: flex; align-items: center; gap: 32px;">
+                        <a href="#home" class="nav-link" style="color: white; padding: 8px 12px; text-decoration: none; font-weight: 500; transition: color 0.3s;">Home</a>
+                        <a href="#features" class="nav-link" style="color: rgba(255,255,255,0.7); padding: 8px 12px; text-decoration: none; font-weight: 500; transition: color 0.3s;">Features</a>
+                        <a href="#explore" class="nav-link" style="color: rgba(255,255,255,0.7); padding: 8px 12px; text-decoration: none; font-weight: 500; transition: color 0.3s;">Explore</a>
+                        <a href="#messages" class="nav-link" style="color: rgba(255,255,255,0.7); padding: 8px 12px; text-decoration: none; font-weight: 500; transition: color 0.3s;">Messages</a>
+                        <a href="#profile" class="nav-link" style="color: rgba(255,255,255,0.7); padding: 8px 12px; text-decoration: none; font-weight: 500; transition: color 0.3s;">Profile</a>
                     </div>
                 </div>
                 
                 <!-- Auth Buttons -->
-                <div class="hidden md:block">
-                    <button onclick="showLoginModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors mr-2">
+                <div class="auth-buttons" style="display: none;">
+                    <button onclick="showLoginModal()" class="btn-secondary" style="margin-right: 12px;">
                         Login
                     </button>
-                    <button onclick="showSignupModal()" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    <button onclick="showSignupModal()" class="btn-primary">
                         Sign Up
                     </button>
                 </div>
                 
                 <!-- Mobile menu button -->
-                <div class="md:hidden">
-                    <button onclick="toggleMobileMenu()" class="text-gray-400 hover:text-white p-2">
-                        <i class="fas fa-bars text-xl"></i>
+                <div class="mobile-menu-btn" style="display: block;">
+                    <button onclick="toggleMobileMenu()" style="background: none; border: none; color: rgba(255,255,255,0.7); padding: 8px; cursor: pointer;">
+                        <i class="fas fa-bars" style="font-size: 20px;"></i>
                     </button>
                 </div>
             </div>
         </div>
         
         <!-- Mobile Navigation -->
-        <div id="mobileMenu" class="hidden md:hidden bg-gray-800/95 backdrop-blur-lg">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="#home" class="text-white hover:text-purple-400 block px-3 py-2 rounded-md text-base font-medium">Home</a>
-                <a href="#features" class="text-gray-300 hover:text-purple-400 block px-3 py-2 rounded-md text-base font-medium">Features</a>
-                <a href="#explore" class="text-gray-300 hover:text-purple-400 block px-3 py-2 rounded-md text-base font-medium">Explore</a>
-                <a href="#messages" class="text-gray-300 hover:text-purple-400 block px-3 py-2 rounded-md text-base font-medium">Messages</a>
-                <a href="#profile" class="text-gray-300 hover:text-purple-400 block px-3 py-2 rounded-md text-base font-medium">Profile</a>
-                <button onclick="showLoginModal()" class="bg-purple-600 hover:bg-purple-700 text-white block px-3 py-2 rounded-md text-base font-medium w-full mt-2">
+        <div id="mobileMenu" style="display: none; background: rgba(26, 8, 48, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+            <div style="padding: 16px;">
+                <a href="#home" onclick="toggleMobileMenu()" style="color: white; display: block; padding: 12px; text-decoration: none; font-weight: 500;">Home</a>
+                <a href="#features" onclick="toggleMobileMenu()" style="color: rgba(255,255,255,0.7); display: block; padding: 12px; text-decoration: none; font-weight: 500;">Features</a>
+                <a href="#explore" onclick="toggleMobileMenu()" style="color: rgba(255,255,255,0.7); display: block; padding: 12px; text-decoration: none; font-weight: 500;">Explore</a>
+                <a href="#messages" onclick="toggleMobileMenu()" style="color: rgba(255,255,255,0.7); display: block; padding: 12px; text-decoration: none; font-weight: 500;">Messages</a>
+                <a href="#profile" onclick="toggleMobileMenu()" style="color: rgba(255,255,255,0.7); display: block; padding: 12px; text-decoration: none; font-weight: 500;">Profile</a>
+                <button onclick="showLoginModal(); toggleMobileMenu();" class="btn-secondary" style="width: 100%; margin-top: 16px;">
                     Login
                 </button>
-                <button onclick="showSignupModal()" class="bg-pink-600 hover:bg-pink-700 text-white block px-3 py-2 rounded-md text-base font-medium w-full mt-2">
+                <button onclick="showSignupModal(); toggleMobileMenu();" class="btn-primary" style="width: 100%; margin-top: 12px;">
                     Sign Up
                 </button>
             </div>
@@ -72,214 +77,212 @@
     </nav>
 
     <!-- Hero Section -->
-    <section id="home" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900/20 via-pink-900/20 to-gray-900">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-            <div class="text-center">
-                <h1 class="text-5xl md:text-7xl font-bold mb-6">
-                    <span class="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                        Share Your Moments
-                    </span>
-                </h1>
-                <p class="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
-                    Connect with friends, share your life, and discover amazing content on PictoGram
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button onclick="showSignupModal()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-all transform hover:scale-105">
-                        Get Started
-                    </button>
-                    <button onclick="scrollToSection('features')" class="bg-gray-800 hover:bg-gray-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-all border border-gray-700">
-                        Learn More
-                    </button>
-                </div>
+    <section id="home" class="hero-section" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 80px 20px;">
+        <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+            <h1 style="font-size: clamp(32px, 8vw, 64px); font-weight: 700; margin-bottom: 24px; line-height: 1.2;">
+                <span style="background: linear-gradient(135deg, #E0389A, #CC2299); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                    Share Your Moments
+                </span>
+            </h1>
+            <p style="font-size: clamp(18px, 3vw, 24px); color: rgba(255,255,255,0.7); margin-bottom: 48px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Connect with friends, share your life, and discover amazing content on PictoGram
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 16px; align-items: center; justify-content: center;">
+                <button onclick="showSignupModal()" class="btn-primary">
+                    <span>Get Started</span>
+                </button>
+                <button onclick="scrollToSection('features')" class="btn-secondary">
+                    Learn More
+                </button>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="py-20 bg-gray-800/50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold mb-4">Why Choose PictoGram?</h2>
-                <p class="text-xl text-gray-400">Experience social media reimagined</p>
+    <section id="features" style="padding: 80px 20px; background: rgba(17, 0, 24, 0.5);">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 64px;">
+                <h2 style="font-size: 36px; font-weight: 700; margin-bottom: 16px;">Why Choose PictoGram?</h2>
+                <p style="font-size: 20px; color: rgba(255,255,255,0.7);">Experience social media reimagined</p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px;">
                 <!-- Feature 1 -->
-                <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all">
-                    <div class="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-camera text-white text-xl"></i>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-camera"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">Share Moments</h3>
-                    <p class="text-gray-400">Upload photos and videos to share your life with friends and followers</p>
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px;">Share Moments</h3>
+                    <p style="color: rgba(255,255,255,0.7); line-height: 1.6;">Upload photos and videos to share your life with friends and followers</p>
                 </div>
                 
                 <!-- Feature 2 -->
-                <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all">
-                    <div class="w-12 h-12 bg-pink-600 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-comments text-white text-xl"></i>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">Real-time Chat</h3>
-                    <p class="text-gray-400">Message with friends in real-time with our advanced chat system</p>
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px;">Real-time Chat</h3>
+                    <p style="color: rgba(255,255,255,0.7); line-height: 1.6;">Message with friends in real-time with our advanced chat system</p>
                 </div>
                 
                 <!-- Feature 3 -->
-                <div class="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all">
-                    <div class="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center mb-4">
-                        <i class="fas fa-users text-white text-xl"></i>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">Connect & Follow</h3>
-                    <p class="text-gray-400">Follow interesting people and build your social network</p>
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px;">Connect & Follow</h3>
+                    <p style="color: rgba(255,255,255,0.7); line-height: 1.6;">Follow interesting people and build your social network</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Explore Section -->
-    <section id="explore" class="py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold mb-4">Discover Amazing Content</h2>
-                <p class="text-xl text-gray-400">Explore posts from our community</p>
+    <section id="explore" style="padding: 80px 20px;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 64px;">
+                <h2 style="font-size: 36px; font-weight: 700; margin-bottom: 16px;">Discover Amazing Content</h2>
+                <p style="font-size: 20px; color: rgba(255,255,255,0.7);">Explore posts from our community</p>
             </div>
             
             <!-- Posts Grid -->
-            <div id="postsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="postsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 32px;">
                 <!-- Posts will be loaded here -->
             </div>
         </div>
     </section>
 
     <!-- Messages Section -->
-    <section id="messages" class="py-20 bg-gray-800/50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold mb-4">Stay Connected</h2>
-                <p class="text-xl text-gray-400">Message your friends and followers</p>
+    <section id="messages" style="padding: 80px 20px; background: rgba(17, 0, 24, 0.5);">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 64px;">
+                <h2 style="font-size: 36px; font-weight: 700; margin-bottom: 16px;">Stay Connected</h2>
+                <p style="font-size: 20px; color: rgba(255,255,255,0.7);">Message your friends and followers</p>
             </div>
             
             <!-- Messages List -->
-            <div id="messagesList" class="max-w-4xl mx-auto">
+            <div id="messagesList" style="max-width: 800px; margin: 0 auto;">
                 <!-- Messages will be loaded here -->
             </div>
         </div>
     </section>
 
     <!-- Profile Section -->
-    <section id="profile" class="py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold mb-4">Your Profile</h2>
-                <p class="text-xl text-gray-400">Manage your account and settings</p>
+    <section id="profile" style="padding: 80px 20px;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="text-align: center; margin-bottom: 64px;">
+                <h2 style="font-size: 36px; font-weight: 700; margin-bottom: 16px;">Your Profile</h2>
+                <p style="font-size: 20px; color: rgba(255,255,255,0.7);">Manage your account and settings</p>
             </div>
             
             <!-- Profile Content -->
-            <div id="profileContent" class="max-w-4xl mx-auto">
+            <div id="profileContent" style="max-width: 800px; margin: 0 auto;">
                 <!-- Profile will be loaded here -->
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 border-t border-gray-800 py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer style="background: var(--bg-dark); border-top: 1px solid var(--border-color); padding: 48px 20px;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 32px;">
                 <div>
-                    <h3 class="text-xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 16px; background: linear-gradient(135deg, #E0389A, #CC2299); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
                         PictoGram
                     </h3>
-                    <p class="text-gray-400">Share your moments with the world</p>
+                    <p style="color: rgba(255,255,255,0.7);">Share your moments with the world</p>
                 </div>
                 
                 <div>
-                    <h4 class="text-lg font-semibold mb-4">Product</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="#" class="hover:text-purple-400 transition-colors">Features</a></li>
-                        <li><a href="#" class="hover:text-purple-400 transition-colors">Security</a></li>
-                        <li><a href="#" class="hover:text-purple-400 transition-colors">Pricing</a></li>
+                    <h4 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Product</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 8px;"><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">Features</a></li>
+                        <li style="margin-bottom: 8px;"><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">Security</a></li>
+                        <li style="margin-bottom: 8px;"><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">Pricing</a></li>
                     </ul>
                 </div>
                 
                 <div>
-                    <h4 class="text-lg font-semibold mb-4">Company</h4>
-                    <ul class="space-y-2 text-gray-400">
-                        <li><a href="#" class="hover:text-purple-400 transition-colors">About</a></li>
-                        <li><a href="#" class="hover:text-purple-400 transition-colors">Blog</a></li>
-                        <li><a href="#" class="hover:text-purple-400 transition-colors">Careers</a></li>
+                    <h4 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Company</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 8px;"><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">About</a></li>
+                        <li style="margin-bottom: 8px;"><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">Blog</a></li>
+                        <li style="margin-bottom: 8px;"><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">Careers</a></li>
                     </ul>
                 </div>
                 
                 <div>
-                    <h4 class="text-lg font-semibold mb-4">Connect</h4>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-purple-400 transition-colors">
-                            <i class="fab fa-twitter text-xl"></i>
+                    <h4 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Connect</h4>
+                    <div style="display: flex; gap: 16px;">
+                        <a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">
+                            <i class="fab fa-twitter" style="font-size: 20px;"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-purple-400 transition-colors">
-                            <i class="fab fa-instagram text-xl"></i>
+                        <a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">
+                            <i class="fab fa-instagram" style="font-size: 20px;"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-purple-400 transition-colors">
-                            <i class="fab fa-facebook text-xl"></i>
+                        <a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">
+                            <i class="fab fa-facebook" style="font-size: 20px;"></i>
                         </a>
                     </div>
                 </div>
             </div>
             
-            <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
+            <div style="margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border-color); text-align: center; color: rgba(255,255,255,0.7);">
                 <p>&copy; 2024 PictoGram. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
     <!-- Modals -->
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-        <div class="bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 border border-purple-500/20">
-            <h2 class="text-2xl font-bold mb-6 text-center">Welcome Back</h2>
+    <div id="loginModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 class="modal-title">Welcome Back</h2>
             <form onsubmit="handleLogin(event)">
-                <div class="mb-4">
-                    <label class="block text-gray-300 mb-2">Email</label>
-                    <input type="email" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white" placeholder="Enter your email">
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; color: rgba(255,255,255,0.9); font-weight: 500;">Email</label>
+                    <input type="email" required class="form-input" placeholder="Enter your email">
                 </div>
-                <div class="mb-6">
-                    <label class="block text-gray-300 mb-2">Password</label>
-                    <input type="password" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white" placeholder="Enter your password">
+                <div style="margin-bottom: 32px;">
+                    <label style="display: block; margin-bottom: 8px; color: rgba(255,255,255,0.9); font-weight: 500;">Password</label>
+                    <input type="password" required class="form-input" placeholder="Enter your password">
                 </div>
-                <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-2 rounded-lg font-semibold transition-all">
-                    Login
+                <button type="submit" class="btn-primary" style="width: 100%;">
+                    <span>Login</span>
                 </button>
             </form>
-            <div class="mt-4 text-center">
-                <p class="text-gray-400">Don't have an account? <a href="#" onclick="switchToSignup()" class="text-purple-400 hover:text-purple-300">Sign up</a></p>
+            <div style="margin-top: 24px; text-align: center;">
+                <p style="color: rgba(255,255,255,0.7);">Don't have an account? <a href="#" onclick="switchToSignup()" style="color: #E0389A; text-decoration: none;">Sign up</a></p>
             </div>
-            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+            <button onclick="closeModal('loginModal')" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.7); font-size: 20px; cursor: pointer;">
                 <i class="fas fa-times"></i>
             </button>
         </div>
     </div>
 
-    <div id="signupModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-        <div class="bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 border border-purple-500/20">
-            <h2 class="text-2xl font-bold mb-6 text-center">Create Account</h2>
+    <div id="signupModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 class="modal-title">Create Account</h2>
             <form onsubmit="handleSignup(event)">
-                <div class="mb-4">
-                    <label class="block text-gray-300 mb-2">Display Name</label>
-                    <input type="text" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white" placeholder="Choose a username">
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; color: rgba(255,255,255,0.9); font-weight: 500;">Display Name</label>
+                    <input type="text" required class="form-input" placeholder="Choose a username">
                 </div>
-                <div class="mb-4">
-                    <label class="block text-gray-300 mb-2">Email</label>
-                    <input type="email" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white" placeholder="Enter your email">
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; margin-bottom: 8px; color: rgba(255,255,255,0.9); font-weight: 500;">Email</label>
+                    <input type="email" required class="form-input" placeholder="Enter your email">
                 </div>
-                <div class="mb-6">
-                    <label class="block text-gray-300 mb-2">Password</label>
-                    <input type="password" required class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:border-purple-500 text-white" placeholder="Create a password">
+                <div style="margin-bottom: 32px;">
+                    <label style="display: block; margin-bottom: 8px; color: rgba(255,255,255,0.9); font-weight: 500;">Password</label>
+                    <input type="password" required class="form-input" placeholder="Create a password">
                 </div>
-                <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-2 rounded-lg font-semibold transition-all">
-                    Sign Up
+                <button type="submit" class="btn-primary" style="width: 100%;">
+                    <span>Sign Up</span>
                 </button>
             </form>
-            <div class="mt-4 text-center">
-                <p class="text-gray-400">Already have an account? <a href="#" onclick="switchToLogin()" class="text-purple-400 hover:text-purple-300">Login</a></p>
+            <div style="margin-top: 24px; text-align: center;">
+                <p style="color: rgba(255,255,255,0.7);">Already have an account? <a href="#" onclick="switchToLogin()" style="color: #E0389A; text-decoration: none;">Login</a></p>
             </div>
-            <button onclick="closeModal('signupModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+            <button onclick="closeModal('signupModal')" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.7); font-size: 20px; cursor: pointer;">
                 <i class="fas fa-times"></i>
             </button>
         </div>
