@@ -54,21 +54,25 @@ class PictoGramApp {
 
     // Initialize Firebase with your app's configuration
     initializeFirebase() {
-        // Check if Firebase config has real values
+        // TODO: Replace with your actual Firebase config from your Flutter app
+        // Find this in your Flutter project's firebase_options.dart or main.dart
         const firebaseConfig = {
-            apiKey: "your-api-key-here",
-            authDomain: "your-project-id.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project-id.appspot.com",
-            messagingSenderId: "your-sender-id",
-            appId: "your-app-id"
+            apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", // Replace with your API key
+            authDomain: "your-project-id.firebaseapp.com", // Replace with your project domain
+            projectId: "your-project-id", // Replace with your project ID
+            storageBucket: "your-project-id.appspot.com", // Replace with your storage bucket
+            messagingSenderId: "123456789012", // Replace with your sender ID
+            appId: "1:123456789012:web:abcdef1234567890abcdef12" // Replace with your app ID
         };
 
         // Check if using placeholder config
-        const isPlaceholderConfig = firebaseConfig.apiKey === "your-api-key-here";
+        const isPlaceholderConfig = firebaseConfig.apiKey === "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ||
+                                   firebaseConfig.apiKey.includes("XXXXXXXX") ||
+                                   firebaseConfig.projectId === "your-project-id";
         
         if (isPlaceholderConfig) {
             console.log('Firebase not configured - using demo mode');
+            console.log('To use real Firebase, update the firebaseConfig in script.js with your actual credentials');
             this.auth = null;
             this.firestore = null;
             return;
