@@ -54,15 +54,14 @@ class PictoGramApp {
 
     // Initialize Firebase with your app's configuration
     initializeFirebase() {
-        // TODO: Replace with your actual Firebase config from your Flutter app
-        // Find this in your Flutter project's firebase_options.dart or main.dart
+        // Real Firebase credentials from your Flutter app
         const firebaseConfig = {
-            apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", // Replace with your API key
-            authDomain: "your-project-id.firebaseapp.com", // Replace with your project domain
-            projectId: "your-project-id", // Replace with your project ID
-            storageBucket: "your-project-id.appspot.com", // Replace with your storage bucket
-            messagingSenderId: "123456789012", // Replace with your sender ID
-            appId: "1:123456789012:web:abcdef1234567890abcdef12" // Replace with your app ID
+            apiKey: "AIzaSyB72KxNCbgSNHMOm-zaLuCkT1e6GOsidJI",
+            authDomain: "pictogram-af7c8.firebaseapp.com",
+            projectId: "pictogram-af7c8",
+            storageBucket: "pictogram-af7c8.firebasestorage.app",
+            messagingSenderId: "793414644362",
+            appId: "1:793414644362:web:a32b3dde636591a50c3373"
         };
 
         // Check if using placeholder config
