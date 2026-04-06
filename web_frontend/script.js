@@ -215,33 +215,43 @@ class PictoGramApp {
 
     // Validation (matching app logic)
     validateLoginForm(email, phone, password) {
+        console.log('DEBUG: validateLoginForm called', { useEmailLogin: this.useEmailLogin, email, phone, password: password.length > 0 });
+        
         if (this.useEmailLogin) {
             if (!email) {
+                console.log('DEBUG: Email validation failed - empty');
                 this.showError('Please enter your email', 'login');
                 return false;
             }
             if (!this.isValidEmail(email)) {
+                console.log('DEBUG: Email validation failed - invalid format');
                 this.showError('Please enter a valid email', 'login');
                 return false;
             }
             if (!password) {
+                console.log('DEBUG: Password validation failed - empty');
                 this.showError('Please enter your password', 'login');
                 return false;
             }
             if (password.length < 6) {
+                console.log('DEBUG: Password validation failed - too short');
                 this.showError('Password must be at least 6 characters', 'login');
                 return false;
             }
         } else {
             if (!phone) {
+                console.log('DEBUG: Phone validation failed - empty');
                 this.showError('Please enter your phone number', 'login');
                 return false;
             }
             if (!this.isValidPhone(phone)) {
+                console.log('DEBUG: Phone validation failed - invalid format');
                 this.showError('Please enter a valid 10-digit phone number', 'login');
                 return false;
             }
         }
+        
+        console.log('DEBUG: Validation passed');
         return true;
     }
 
@@ -278,9 +288,13 @@ class PictoGramApp {
     }
     // Firebase Login
     async handleLogin(event) {
+        console.log('DEBUG: handleLogin called');
         event.preventDefault();
         
-        if (this.isLoading) return;
+        if (this.isLoading) {
+            console.log('DEBUG: Already loading, returning');
+            return;
+        }
         
         // Hide previous errors
         this.hideError('login');
@@ -288,17 +302,30 @@ class PictoGramApp {
         // Get form values
         const emailField = document.getElementById('emailField');
         const phoneField = document.getElementById('phoneField');
-        const passwordField = document.querySelector('#passwordField input[type="password"]');
+        const passwordField = document.querySelector('#passwordField input[type="password"]') || 
+                              document.querySelector('#passwordField input');
         
-        const email = emailField.value.trim();
-        const phone = phoneField.value.trim();
-        const password = passwordField.value.trim();
+        console.log('DEBUG: Fields found:', { emailField: !!emailField, phoneField: !!phoneField, passwordField: !!passwordField });
         
-        // Validate inputs (matching app logic)
-        if (!this.validateLoginForm(email, phone, password)) {
+        if (!emailField || !passwordField) {
+            console.error('Required fields not found');
+            this.showError('Form fields not found. Please refresh the page.', 'login');
             return;
         }
         
+        const email = emailField.value.trim();
+        const phone = phoneField ? phoneField.value.trim() : '';
+        const password = passwordField.value.trim();
+        
+        console.log('DEBUG: Form values:', { email: email.length > 0, phone: phone.length > 0, password: password.length > 0 });
+        
+        // Validate inputs (matching app logic)
+        if (!this.validateLoginForm(email, phone, password)) {
+            console.log('DEBUG: Validation failed');
+            return;
+        }
+        
+        console.log('DEBUG: Validation passed, setting loading state');
         // Set loading state
         this.setLoading(true, 'login');
         
@@ -356,9 +383,19 @@ class PictoGramApp {
         this.hideError('signup');
         
         // Get form values
-        const displayName = event.target.querySelector('input[type="text"]').value.trim();
-        const email = event.target.querySelector('input[type="email"]').value.trim();
-        const password = document.getElementById('signupPassword').value.trim();
+        const displayNameField = event.target.querySelector('input[type="text"]');
+        const emailField = event.target.querySelector('input[type="email"]');
+        const passwordField = document.getElementById('signupPassword');
+        
+        if (!displayNameField || !emailField || !passwordField) {
+            console.error('Signup fields not found');
+            this.showError('Form fields not found. Please refresh the page.', 'signup');
+            return;
+        }
+        
+        const displayName = displayNameField.value.trim();
+        const email = emailField.value.trim();
+        const password = passwordField.value.trim();
         
         // Validate inputs
         if (!this.validateSignupForm(displayName, email, password)) {
