@@ -886,9 +886,32 @@ class PictoGramApp {
 
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new PictoGramApp();
-    
-    // Add smooth scroll behavior for navigation links
+    try {
+        console.log('DEBUG: DOM loaded, initializing app...');
+        window.app = new PictoGramApp();
+        console.log('DEBUG: App initialized successfully');
+    } catch (error) {
+        console.error('ERROR: Failed to initialize app:', error);
+        document.body.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100vh; background: #0A0010; color: white; font-family: Arial, sans-serif;">
+                <div style="text-align: center; padding: 40px; background: rgba(224, 56, 154, 0.1); border-radius: 16px; border: 1px solid rgba(224, 56, 154, 0.3);">
+                    <h2 style="color: #E0389A; margin-bottom: 20px;">Application Error</h2>
+                    <p style="margin-bottom: 20px;">Failed to initialize the application.</p>
+                    <details style="text-align: left; margin-bottom: 20px;">
+                        <summary style="cursor: pointer; color: #E0389A;">Error Details</summary>
+                        <pre style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-top: 10px; font-size: 12px; overflow-x: auto;">${error.stack || error.message}</pre>
+                    </details>
+                    <button onclick="location.reload()" style="background: #E0389A; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                        Reload Page
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+});
+
+// Add smooth scroll behavior for navigation links
+document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
@@ -925,8 +948,10 @@ const observer = new IntersectionObserver((entries) => {
     });
 }, observerOptions);
 
-// Observe elements for animations
+// Observe elements for animations (run after app initialization)
 document.addEventListener('DOMContentLoaded', () => {
-    const elementsToAnimate = document.querySelectorAll('.post-card, .message-item');
-    elementsToAnimate.forEach(el => observer.observe(el));
+    setTimeout(() => {
+        const elementsToAnimate = document.querySelectorAll('.post-card, .message-item');
+        elementsToAnimate.forEach(el => observer.observe(el));
+    }, 100);
 });
