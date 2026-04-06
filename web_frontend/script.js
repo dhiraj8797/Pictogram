@@ -708,19 +708,18 @@ class PictoGramApp {
             
             const postsSnapshot = await this.firestore
                 .collection('posts')
-                .orderBy('createdAt', 'desc')
                 .limit(20) // Load latest 20 posts
                 .get();
             
             console.log('DEBUG: Found total posts:', postsSnapshot.size);
             
-            this.posts = postsSnapshot.docs.map(doc => {
+            const postsData = postsSnapshot.docs.map(doc => {
                 const postData = doc.data();
                 return {
                     id: doc.id,
                     userId: postData.userId,
-                    username: postData.username || 'unknown_user',
-                    avatar: postData.avatar || `https://picsum.photos/seed/${postData.userId}/40/40`,
+                    username: postData.username || postData.displayName || 'unknown_user',
+                    avatar: postData.avatar || postData.userAvatar || `https://picsum.photos/seed/${postData.userId || doc.id}/40/40`,
                     image: postData.image || postData.imageUrl || `https://picsum.photos/seed/${doc.id}/400/400`,
                     caption: postData.caption || postData.description || '',
                     likes: postData.likes || 0,
@@ -731,12 +730,42 @@ class PictoGramApp {
                 };
             });
             
+            // Load user information for posts that don't have usernames
+            const postsWithUserInfo = await this.loadUserInfoForPosts(postsData);
+            
+            this.posts = postsWithUserInfo;
             console.log('DEBUG: Processed all posts:', this.posts.length);
             
         } catch (error) {
             console.error('Error loading all posts:', error);
             this.loadDemoPosts();
         }
+    }
+
+    // Load user information for posts
+    async loadUserInfoForPosts(posts) {
+        const postsWithUserInfo = await Promise.all(posts.map(async (post) => {
+            if (post.username === 'unknown_user' && post.userId) {
+                try {
+                    // Try to get user info from users collection
+                    const userDoc = await this.firestore.collection('users').doc(post.userId).get();
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        post.username = userData.displayName || userData.username || 'User';
+                        post.avatar = userData.avatar || post.avatar;
+                    } else {
+                        // Fallback: create username from email or UID
+                        post.username = 'User_' + post.userId.substring(0, 6);
+                    }
+                } catch (error) {
+                    console.log('Could not load user info for post:', post.id);
+                    post.username = 'User_' + post.userId.substring(0, 6);
+                }
+            }
+            return post;
+        }));
+        
+        return postsWithUserInfo;
     }
 
     // Load all messages from Firebase
@@ -1080,10 +1109,17 @@ class PictoGramApp {
             this.userPosts = postsSnapshot.docs.map(doc => {
                 const postData = doc.data();
                 console.log('DEBUG: Post data:', postData);
+                
+                // Use current user's info for their posts
+                const username = this.currentUser.displayName || 
+                               postData.username || 
+                               postData.displayName || 
+                               'User';
+                
                 return {
                     id: doc.id,
                     userId: postData.userId || this.currentUser.uid,
-                    username: postData.username || this.currentUser.displayName.toLowerCase().replace(/\s+/g, '_'),
+                    username: username,
                     avatar: postData.avatar || this.currentUser.avatar,
                     image: postData.image || postData.imageUrl || `https://picsum.photos/seed/${doc.id}/400/400`,
                     caption: postData.caption || postData.description || '',
