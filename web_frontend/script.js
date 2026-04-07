@@ -746,18 +746,19 @@ class PictoGramApp {
                                 postData.author || 
                                 postData.userDisplayName ||
                                 postData.createdBy ||
+                                postData.ownerName ||
                                 'unknown_user';
                 
                 console.log('DEBUG: Username resolved to:', username, 'for post:', doc.id);
                 
                 return {
                     id: doc.id,
-                    userId: postData.userId || postData.uid || postData.authorId,
+                    userId: postData.userId || postData.uid || postData.authorId || postData.ownerId,
                     username: username,
-                    avatar: postData.avatar || postData.userAvatar || postData.userPhoto || `https://picsum.photos/seed/${postData.userId || doc.id}/40/40`,
+                    avatar: postData.avatar || postData.userAvatar || postData.userPhoto || postData.ownerProfileImage || `https://picsum.photos/seed/${postData.userId || doc.id}/40/40`,
                     image: postData.image || postData.imageUrl || postData.photo || `https://picsum.photos/seed/${doc.id}/400/400`,
                     caption: postData.caption || postData.description || postData.text || '',
-                    likes: postData.likes || postData.likeCount || 0,
+                    likes: postData.likes || postData.likeCount || postData.likesCount || 0,
                     comments: postData.comments || postData.commentCount || 0,
                     time: this.formatTime(postData.createdAt),
                     liked: postData.liked || false,
@@ -1087,7 +1088,7 @@ class PictoGramApp {
                     avatar: postData.avatar || this.currentUser.avatar,
                     image: postData.image || postData.imageUrl || postData.photo || `https://picsum.photos/seed/${doc.id}/400/400`,
                     caption: postData.caption || postData.description || postData.text || '',
-                    likes: postData.likes || postData.likeCount || 0,
+                    likes: postData.likes || postData.likeCount || postData.likesCount || 0,
                     comments: postData.comments || postData.commentCount || 0,
                     time: this.formatTime(postData.createdAt),
                     liked: postData.liked || false,
