@@ -1023,6 +1023,15 @@ class PictoGramApp {
         window.createDemoChat = (userId, username, avatar) => {
             app.createDemoChat(userId, username, avatar);
         };
+
+        // Legal functions
+        window.showTermsAndConditions = () => {
+            document.getElementById('termsModal').classList.remove('hidden');
+        };
+
+        window.showPrivacyPolicy = () => {
+            document.getElementById('privacyModal').classList.remove('hidden');
+        };
     }
 
     // Load user data from Firebase

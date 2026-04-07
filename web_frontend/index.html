@@ -315,6 +315,15 @@
                 </div>
                 
                 <div>
+                    <h4 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Legal</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 8px;"><a href="#" onclick="showTermsAndConditions()" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">Terms & Conditions</a></li>
+                        <li style="margin-bottom: 8px;"><a href="#" onclick="showPrivacyPolicy()" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">Privacy Policy</a></li>
+                        <li style="margin-bottom: 8px;"><a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">Cookie Policy</a></li>
+                    </ul>
+                </div>
+                
+                <div>
                     <h4 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Connect</h4>
                     <div style="display: flex; gap: 16px;">
                         <a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;">
@@ -331,7 +340,12 @@
             </div>
             
             <div style="margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border-color); text-align: center; color: rgba(255,255,255,0.7);">
-                <p>&copy; 2024 PictoGram. All rights reserved.</p>
+                <p style="margin-bottom: 12px;">&copy; 2024 PictoGram. All rights reserved.</p>
+                <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;">
+                    <a href="#" onclick="showTermsAndConditions()" style="color: rgba(255,255,255,0.6); text-decoration: none; font-size: 14px; transition: color 0.3s;">Terms & Conditions</a>
+                    <a href="#" onclick="showPrivacyPolicy()" style="color: rgba(255,255,255,0.6); text-decoration: none; font-size: 14px; transition: color 0.3s;">Privacy Policy</a>
+                    <a href="#" style="color: rgba(255,255,255,0.6); text-decoration: none; font-size: 14px; transition: color 0.3s;">Cookie Policy</a>
+                </div>
             </div>
         </div>
     </footer>
@@ -519,6 +533,93 @@
             
             <!-- Close Button -->
             <button onclick="closeModal('signupModal')" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.7); font-size: 20px; cursor: pointer;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Terms & Conditions Modal -->
+    <div id="termsModal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <div style="padding: 32px;">
+                <h2 style="color: white; font-size: 28px; font-weight: 700; margin-bottom: 24px;">Terms & Conditions</h2>
+                
+                <div style="color: rgba(255,255,255,0.8); line-height: 1.6;">
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">1. Acceptance of Terms</h3>
+                    <p style="margin-bottom: 16px;">By accessing and using PictoGram, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                    
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">2. Use License</h3>
+                    <p style="margin-bottom: 16px;">Permission is granted to temporarily download one copy of PictoGram for personal, non-commercial transitory viewing only.</p>
+                    
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">3. Disclaimer</h3>
+                    <p style="margin-bottom: 16px;">The information on this website is provided on an as-is basis. To the fullest extent permitted by law, this Company:</p>
+                    <ul style="margin-left: 20px; margin-bottom: 16px;">
+                        <li>excludes all representations and warranties relating to this website and its contents</li>
+                        <li>excludes all liability for damages arising out of or in connection with your use of this website</li>
+                    </ul>
+                    
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">4. Content Guidelines</h3>
+                    <p style="margin-bottom: 16px;">Users must not post content that is illegal, offensive, or violates the rights of others. All content should be appropriate for a general audience.</p>
+                    
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">5. Privacy</h3>
+                    <p style="margin-bottom: 16px;">Your privacy is important to us. Please review our Privacy Policy, which also governs the Site's use, to understand our practices.</p>
+                    
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">6. Contact Information</h3>
+                    <p style="margin-bottom: 16px;">Questions about the Terms of Service should be sent to us at legal@pictogram.com</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 32px;">
+                    <button onclick="closeModal('termsModal')" style="background: var(--primary-purple); color: white; border: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        I Understand
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Close Button -->
+            <button onclick="closeModal('termsModal')" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.7); font-size: 20px; cursor: pointer;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div id="privacyModal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <div style="padding: 32px;">
+                <h2 style="color: white; font-size: 28px; font-weight: 700; margin-bottom: 24px;">Privacy Policy</h2>
+                
+                <div style="color: rgba(255,255,255,0.8); line-height: 1.6;">
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">1. Information We Collect</h3>
+                    <p style="margin-bottom: 16px;">We collect information you provide directly to us, such as when you create an account, upload content, or contact us.</p>
+                    
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">2. How We Use Your Information</h3>
+                    <p style="margin-bottom: 16px;">We use the information we collect to provide, maintain, and improve our services, process transactions, and communicate with you.</p>
+                    
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">3. Information Sharing</h3>
+                    <p style="margin-bottom: 16px;">We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy.</p>
+                    
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">4. Data Security</h3>
+                    <p style="margin-bottom: 16px;">We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.</p>
+                    
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">5. Cookies</h3>
+                    <p style="margin-bottom: 16px;">We use cookies and similar tracking technologies to track activity on our service and hold certain information.</p>
+                    
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">6. Your Rights</h3>
+                    <p style="margin-bottom: 16px;">You have the right to access, update, or delete your personal information at any time.</p>
+                    
+                    <h3 style="color: white; font-size: 18px; font-weight: 600; margin: 24px 0 12px 0;">7. Contact Us</h3>
+                    <p style="margin-bottom: 16px;">If you have any questions about this Privacy Policy, please contact us at privacy@pictogram.com</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 32px;">
+                    <button onclick="closeModal('privacyModal')" style="background: var(--primary-purple); color: white; border: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        I Understand
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Close Button -->
+            <button onclick="closeModal('privacyModal')" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: rgba(255,255,255,0.7); font-size: 20px; cursor: pointer;">
                 <i class="fas fa-times"></i>
             </button>
         </div>
