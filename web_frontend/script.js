@@ -1059,12 +1059,24 @@ class PictoGramApp {
         try {
             console.log('DEBUG: Loading posts for user:', this.currentUser.uid);
             
-            // Simple query without ordering to avoid index requirement
-            const postsSnapshot = await this.firestore
-                .collection('posts')
-                .where('userId', '==', this.currentUser.uid)
-                .limit(20) // Limit to avoid index issues
-                .get();
+            // Try multiple field names for user ID query
+            let postsSnapshot;
+            try {
+                // First try with ownerId (based on your app structure)
+                postsSnapshot = await this.firestore
+                    .collection('posts')
+                    .where('ownerId', '==', this.currentUser.uid)
+                    .limit(20)
+                    .get();
+            } catch (error) {
+                console.log('DEBUG: ownerId query failed, trying userId:', error);
+                // Fallback to userId
+                postsSnapshot = await this.firestore
+                    .collection('posts')
+                    .where('userId', '==', this.currentUser.uid)
+                    .limit(20)
+                    .get();
+            }
             
             console.log('DEBUG: Found posts:', postsSnapshot.size);
             
@@ -1074,6 +1086,7 @@ class PictoGramApp {
                 
                 // Use current user's info for their posts
                 const username = this.currentUser.displayName || 
+                               postData.ownerName ||
                                postData.username || 
                                postData.displayName ||
                                postData.author ||
@@ -1083,12 +1096,12 @@ class PictoGramApp {
                 
                 return {
                     id: doc.id,
-                    userId: postData.userId || this.currentUser.uid,
+                    userId: postData.ownerId || postData.userId || this.currentUser.uid,
                     username: username,
-                    avatar: postData.avatar || this.currentUser.avatar,
-                    image: postData.image || postData.imageUrl || postData.photo || `https://picsum.photos/seed/${doc.id}/400/400`,
+                    avatar: postData.ownerProfileImage || postData.avatar || this.currentUser.avatar,
+                    image: postData.imageUrl || postData.image || postData.photo || `https://picsum.photos/seed/${doc.id}/400/400`,
                     caption: postData.caption || postData.description || postData.text || '',
-                    likes: postData.likes || postData.likeCount || postData.likesCount || 0,
+                    likes: postData.likesCount || postData.likes || postData.likeCount || 0,
                     comments: postData.comments || postData.commentCount || 0,
                     time: this.formatTime(postData.createdAt),
                     liked: postData.liked || false,
