@@ -629,6 +629,24 @@ class PictoGramApp {
                 `;
             }
             
+            // Update desktop navigation for logged-in users
+            const desktopNav = document.querySelector('.hidden.md\\:flex.items-center.space-x-8');
+            if (desktopNav) {
+                desktopNav.innerHTML = `
+                    <a href="#home" class="nav-link">Home</a>
+                    <a href="#explore" class="nav-link">Posts</a>
+                    <a href="#messages" class="nav-link">Messages</a>
+                    <a href="#profile" class="nav-link">Profile</a>
+                    <div class="auth-buttons">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img src="${this.currentUser.avatar}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--primary-purple);">
+                            <span style="color: white; font-weight: 500;">${this.currentUser.displayName}</span>
+                            <button onclick="app.handleLogout()" class="btn-secondary">Logout</button>
+                        </div>
+                    </div>
+                `;
+            }
+            
             // Update mobile menu
             const mobileAuthButtons = document.querySelector('.mobile-auth-buttons');
             if (mobileAuthButtons) {
@@ -637,7 +655,11 @@ class PictoGramApp {
                         <img src="${this.currentUser.avatar}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--primary-purple);">
                         <span style="color: white; font-weight: 500;">${this.currentUser.displayName}</span>
                     </div>
-                    <button onclick="app.handleLogout()" class="btn-secondary" style="width: 100%; margin-top: 16px;">Logout</button>
+                    <a href="#home" onclick="toggleMobileMenu()" class="mobile-nav-link">Home</a>
+                    <a href="#explore" onclick="toggleMobileMenu()" class="mobile-nav-link">Posts</a>
+                    <a href="#messages" onclick="toggleMobileMenu()" class="mobile-nav-link">Messages</a>
+                    <a href="#profile" onclick="toggleMobileMenu()" class="mobile-nav-link">Profile</a>
+                    <button onclick="app.handleLogout(); toggleMobileMenu();" class="btn-secondary" style="width: 100%; margin-top: 16px;">Logout</button>
                 `;
             }
             
@@ -885,10 +907,6 @@ class PictoGramApp {
         };
 
         // Home page action functions
-        window.createNewPost = () => {
-            app.createNewPost();
-        };
-
         window.viewMessages = () => {
             app.viewMessages();
         };
@@ -1130,9 +1148,6 @@ class PictoGramApp {
                     <i class="fas fa-camera" style="font-size: 48px; color: #8e8e8e; margin-bottom: 16px; display: block;"></i>
                     <h3 style="color: white; margin-bottom: 8px;">No posts yet</h3>
                     <p style="color: #8e8e8e; margin-bottom: 20px;">Be the first to share a moment with the community!</p>
-                    <button onclick="createNewPost()" style="background: #0095f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                        Create your first post
-                    </button>
                 </div>
             `;
             return;
@@ -1288,10 +1303,7 @@ class PictoGramApp {
                 <div style="background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; padding: 60px 20px; text-align: center;">
                     <i class="fas fa-camera" style="font-size: 48px; color: #8e8e8e; margin-bottom: 16px; display: block;"></i>
                     <h3 style="color: white; margin-bottom: 8px;">Start sharing your moments</h3>
-                    <p style="color: #8e8e8e; margin-bottom: 20px;">When you share photos, they will appear on your profile.</p>
-                    <button onclick="createNewPost()" style="background: #0095f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;">
-                        Share your first photo
-                    </button>
+                    <p style="color: #8e8e8e; margin-bottom: 20px;">When you share photos, they will appear on your feed.</p>
                 </div>
             `;
             return;
@@ -1435,10 +1447,6 @@ class PictoGramApp {
     }
 
     // Home page action functions
-    createNewPost() {
-        this.showNotification('Post creation coming soon!', 'info');
-    }
-
     viewMessages() {
         // Navigate to messages section
         const messagesSection = document.getElementById('messages');
