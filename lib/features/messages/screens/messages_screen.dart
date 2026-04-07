@@ -5,9 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/models/chat_message.dart';
+import '../../../core/models/user.dart';
 import '../../../core/services/chat_service.dart';
 import '../../../core/services/follow_service.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../widgets/glass_widgets.dart';
+
+// Follow service provider
+final followServiceProvider = Provider((ref) => FollowService());
 
 // ── Trendily tokens ──────────────────────────────────────────────────────────
 const Color _bg     = Color(0xFF0A0010);
@@ -20,11 +25,26 @@ const Color _border = Color(0x1AFFFFFF);
 class MessagesScreen extends ConsumerWidget {
   const MessagesScreen({super.key});
 
+  void _showSearchDialog(BuildContext context, WidgetRef ref, AppUser me) {
+    showDialog(
+      context: context,
+      builder: (context) => _SearchDialog(me: me),
+    );
+  }
+
+  void _showNewChatOptions(BuildContext context, WidgetRef ref, AppUser me) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _NewChatOptions(me: me),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final me = ref.watch(currentUserProvider).value;
     if (me == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: _bg,
         body: Center(
             child: CircularProgressIndicator(color: _pink, strokeWidth: 2)),
@@ -33,30 +53,27 @@ class MessagesScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: _bg,
+      appBar: AppBar(
+        backgroundColor: _bg,
+        elevation: 0,
+        title: const Text(
+          'Messages',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () => _showSearchDialog(context, ref, me),
+            icon: const Icon(Icons.search, color: Colors.white70),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              backgroundColor: _card,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: const Text(
-                'Start New Chat',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              content: const Text(
-                'Visit a user\'s profile and tap the Message button to start a conversation. You can only message users who follow you back.',
-                style: TextStyle(color: Colors.white70),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Got it', style: TextStyle(color: _pink)),
-                ),
-              ],
-            ),
-          );
-        },
+        onPressed: () => _showNewChatOptions(context, ref, me),
         backgroundColor: _pink,
         child: const Icon(Icons.add_comment, color: Colors.white),
       ),
@@ -329,3 +346,381 @@ class _ChatTile extends StatelessWidget {
         child: const Icon(Icons.person, color: Colors.white54, size: 24),
       );
 }
+
+// ── Search Dialog ─────────────────────────────────────────────────────────────
+class _SearchDialog extends ConsumerStatefulWidget {
+  final AppUser me;
+  const _SearchDialog({required this.me});
+
+  @override
+  ConsumerState<_SearchDialog> createState() => _SearchDialogState();
+}
+
+class _SearchDialogState extends ConsumerState<_SearchDialog> {
+  final _controller = TextEditingController();
+  List<AppUser> _searchResults = [];
+  bool _searching = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _searchUsers(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults.clear();
+      });
+      return;
+    }
+
+    setState(() => _searching = true);
+    
+    try {
+      final users = await FirebaseFirestore.instance
+          .collection('users')
+          .where('displayName', isGreaterThanOrEqualTo: query)
+          .where('displayName', isLessThanOrEqualTo: query + '\uf8ff')
+          .limit(10)
+          .get();
+      
+      setState(() {
+        _searchResults = users.docs
+            .map((doc) => AppUser.fromFirestore(doc))
+            .where((user) => user.uid != widget.me.uid)
+            .toList();
+        _searching = false;
+      });
+    } catch (e) {
+      setState(() => _searching = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: _card,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.7,
+        child: Column(
+          children: [
+            // Header
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, color: Colors.white70),
+                ),
+                const Expanded(
+                  child: Text(
+                    'Search Users',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(width: 48),
+              ],
+            ),
+            const SizedBox(height: 16),
+            
+            // Search field
+            GlassContainer(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              borderRadius: BorderRadius.circular(12),
+              child: TextField(
+                controller: _controller,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: 'Search by username...',
+                  hintStyle: TextStyle(color: Colors.white54),
+                  border: InputBorder.none,
+                  prefixIcon: Icon(Icons.search, color: Colors.white54),
+                ),
+                onChanged: _searchUsers,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Results
+            Expanded(
+              child: _searching
+                  ? const Center(child: CircularProgressIndicator(color: _pink))
+                  : ListView.builder(
+                      itemCount: _searchResults.length,
+                      itemBuilder: (context, index) {
+                        final user = _searchResults[index];
+                        return _UserSearchResult(user: user, me: widget.me);
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── User Search Result ───────────────────────────────────────────────────────
+class _UserSearchResult extends ConsumerWidget {
+  final AppUser user;
+  final AppUser me;
+  const _UserSearchResult({required this.user, required this.me});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return FutureBuilder<bool>(
+      future: _canMessage(ref, me.uid, user.uid),
+      builder: (context, snapshot) {
+        final canMessage = snapshot.data ?? false;
+        
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          leading: CircleAvatar(
+            radius: 24,
+            backgroundImage: user.profileImage?.isNotEmpty == true
+                ? CachedNetworkImageProvider(user.profileImage!)
+                : null,
+            child: user.profileImage?.isNotEmpty != true
+                ? const Icon(Icons.person, color: Colors.white70)
+                : null,
+          ),
+          title: Text(
+            user.displayName,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+          ),
+          subtitle: canMessage
+              ? const Text('Tap to message', style: TextStyle(color: Colors.white54))
+              : const Text('Follow each other to message', style: TextStyle(color: Colors.red)),
+          trailing: canMessage
+              ? Icon(Icons.message, color: _pink)
+              : Icon(Icons.lock, color: Colors.white54),
+          onTap: canMessage ? () => _startChat(context, ref, user, me) : null,
+        );
+      },
+    );
+  }
+
+  Future<bool> _canMessage(WidgetRef ref, String myUid, String otherUid) async {
+    final followService = ref.read(followServiceProvider);
+    final iFollow = await followService.isFollowing(myUid, otherUid);
+    final theyFollow = await followService.isFollowing(otherUid, myUid);
+    return iFollow && theyFollow;
+  }
+
+  void _startChat(BuildContext context, WidgetRef ref, AppUser other, AppUser me) {
+    final chatService = ChatService();
+    
+    chatService.getOrCreateChat(
+      myUid: me.uid,
+      myName: me.displayName,
+      myPhoto: me.profileImage ?? '',
+      otherUid: other.uid,
+      otherName: other.displayName,
+      otherPhoto: other.profileImage ?? '',
+    ).then((chatId) {
+      Navigator.pop(context); // Close search dialog
+      Navigator.pop(context); // Close messages screen
+      context.push('/chat/$chatId', extra: {
+        'otherName': other.displayName,
+        'otherPhoto': other.profileImage ?? '',
+        'otherUid': other.uid,
+      });
+    });
+  }
+}
+
+// ── New Chat Options Bottom Sheet ─────────────────────────────────────────────
+class _NewChatOptions extends ConsumerWidget {
+  final AppUser me;
+  const _NewChatOptions({required this.me});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _card,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          const Text(
+            'Start New Chat',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 20),
+          
+          // Options
+          GlassContainer(
+            padding: const EdgeInsets.all(16),
+            borderRadius: BorderRadius.circular(12),
+            child: Column(
+              children: [
+                _OptionTile(
+                  icon: Icons.search,
+                  title: 'Search Users',
+                  subtitle: 'Find people to message',
+                  onTap: () {
+                    Navigator.pop(context);
+                    showDialog(
+                      context: context,
+                      builder: (context) => _SearchDialog(me: me),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _OptionTile(
+                  icon: Icons.contacts,
+                  title: 'Message Mutual Followers',
+                  subtitle: 'Chat with people you follow and who follow you back',
+                  onTap: () => _showMutualFollowers(context, ref, me),
+                ),
+                const SizedBox(height: 12),
+                _OptionTile(
+                  icon: Icons.info_outline,
+                  title: 'How Messaging Works',
+                  subtitle: 'Learn about messaging rules',
+                  onTap: () => _showMessagingInfo(context),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  void _showMutualFollowers(BuildContext context, WidgetRef ref, AppUser me) {
+    Navigator.pop(context);
+    // TODO: Show mutual followers list
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Mutual followers feature coming soon!')),
+    );
+  }
+
+  void _showMessagingInfo(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: _card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Messaging Rules',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '• You can only message users who follow you back',
+              style: TextStyle(color: Colors.white70),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '• Both users must follow each other (mutual follow)',
+              style: TextStyle(color: Colors.white70),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '• Visit user profiles and tap "Message" to start chatting',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Got it', style: TextStyle(color: _pink)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Option Tile ───────────────────────────────────────────────────────────────
+class _OptionTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _OptionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _pink.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: _pink, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.white54),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Fallback Avatar ─────────────────────────────────────────────────────────────
+Widget _fallbackAvatar() => Container(
+      color: const Color(0xFF2A0830),
+      child: const Icon(Icons.person, color: Colors.white54, size: 24),
+    );
