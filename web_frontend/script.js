@@ -740,6 +740,9 @@ class PictoGramApp {
                 const postData = doc.data();
                 console.log('DEBUG: Processing post:', doc.id, postData);
                 
+                // Check if location exists in the data
+                console.log('DEBUG: Location field in post:', doc.id, postData.location);
+                
                 // Try multiple field names for username
                 const username = postData.username || 
                                 postData.displayName || 
@@ -751,7 +754,7 @@ class PictoGramApp {
                 
                 console.log('DEBUG: Username resolved to:', username, 'for post:', doc.id);
                 
-                return {
+                const processedPost = {
                     id: doc.id,
                     userId: postData.userId || postData.uid || postData.authorId || postData.ownerId,
                     username: username,
@@ -765,6 +768,10 @@ class PictoGramApp {
                     liked: postData.liked || false,
                     createdAt: postData.createdAt
                 };
+                
+                console.log('DEBUG: Processed post location:', processedPost.location, 'for post:', doc.id);
+                
+                return processedPost;
             });
             
             // Load user information for posts that don't have usernames
@@ -1397,6 +1404,8 @@ class PictoGramApp {
 
     // Render individual Instagram-style post
     renderInstagramPost(post) {
+        console.log('DEBUG: Rendering post with location:', post.location, 'for post:', post.id);
+        
         return `
             <div style="background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; margin-bottom: 24px;">
                 <!-- Post Header -->
@@ -1405,7 +1414,7 @@ class PictoGramApp {
                         <img src="${post.avatar}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
                         <div>
                             <p style="color: white; font-weight: 600; margin: 0; font-size: 14px;">${post.username}</p>
-                            <p style="color: white; margin: 0; font-size: 14px;">•</p>
+                            <p style="color: white; margin: 0; font-size: 14px;">${post.location ? `· ${post.location}` : '·'}</p>
                         </div>
                     </div>
                     <button onclick="showPostOptions('${post.id}')" style="background: none; border: none; color: white; cursor: pointer;">
