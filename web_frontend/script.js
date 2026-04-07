@@ -758,6 +758,7 @@ class PictoGramApp {
                     avatar: postData.avatar || postData.userAvatar || postData.userPhoto || postData.ownerProfileImage || `https://picsum.photos/seed/${postData.userId || doc.id}/40/40`,
                     image: postData.image || postData.imageUrl || postData.photo || `https://picsum.photos/seed/${doc.id}/400/400`,
                     caption: postData.caption || postData.description || postData.text || '',
+                    location: postData.location || '',
                     likes: postData.likes || postData.likeCount || postData.likesCount || 0,
                     comments: postData.comments || postData.commentCount || 0,
                     time: this.formatTime(postData.createdAt),
@@ -1114,6 +1115,7 @@ class PictoGramApp {
                     avatar: postData.ownerProfileImage || postData.avatar || this.currentUser.avatar,
                     image: postData.imageUrl || postData.image || postData.photo || `https://picsum.photos/seed/${doc.id}/400/400`,
                     caption: postData.caption || postData.description || postData.text || '',
+                    location: postData.location || '',
                     likes: postData.likesCount || postData.likes || postData.likeCount || 0,
                     comments: postData.comments || postData.commentCount || 0,
                     time: this.formatTime(postData.createdAt),
@@ -1441,6 +1443,14 @@ class PictoGramApp {
                         <span style="color: white; font-weight: 600; margin-right: 8px;">${post.username}</span>
                         <span style="color: white;">${post.caption}</span>
                     </div>
+                    
+                    <!-- Location -->
+                    ${post.location ? `
+                        <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-map-marker-alt" style="color: #8e8e8e; font-size: 12px;"></i>
+                            <span style="color: #8e8e8e; font-size: 12px;">${post.location}</span>
+                        </div>
+                    ` : ''}
                     
                     <!-- Comments -->
                     ${post.comments > 0 ? `<button onclick="viewComments('${post.id}')" style="background: none; border: none; color: #8e8e8e; cursor: pointer; font-size: 14px; padding: 0; margin-bottom: 8px;">View all ${post.comments} comments</button>` : ''}
