@@ -1347,8 +1347,14 @@ class PictoGramApp {
         const postsFeed = document.getElementById('postsFeed');
         if (!postsFeed) return;
         
+        console.log('DEBUG: renderPostsFeed called');
+        console.log('DEBUG: User posts available:', this.userPosts?.length || 0);
+        console.log('DEBUG: All posts available:', this.posts?.length || 0);
+        
         // Combine all posts (user's posts + other posts) and sort by time
         const allPosts = [...(this.userPosts || []), ...(this.posts || [])];
+        
+        console.log('DEBUG: Combined posts total:', allPosts.length);
         
         // Sort by newest first
         allPosts.sort((a, b) => {
@@ -1358,6 +1364,7 @@ class PictoGramApp {
         });
         
         if (allPosts.length === 0) {
+            console.log('DEBUG: No posts to display, showing empty state');
             postsFeed.innerHTML = `
                 <div style="background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; padding: 60px 20px; text-align: center;">
                     <i class="fas fa-camera" style="font-size: 48px; color: #8e8e8e; margin-bottom: 16px; display: block;"></i>
@@ -1368,6 +1375,7 @@ class PictoGramApp {
             return;
         }
         
+        console.log('DEBUG: Rendering posts in feed:', allPosts.length);
         postsFeed.innerHTML = allPosts.map(post => this.renderInstagramPost(post)).join('');
     }
 
