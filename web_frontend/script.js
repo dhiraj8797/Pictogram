@@ -1183,17 +1183,18 @@ class PictoGramApp {
         // Load real stories
         this.loadStories();
         
-        // Render posts feed
-        this.renderPostsFeed();
+        // Load user posts first, then all posts, then render
+        this.loadUserPosts().then(() => {
+            this.loadAllPosts().then(() => {
+                // Render posts feed after both are loaded
+                this.renderPostsFeed();
+            });
+        });
         
         // Load real suggestions
         this.loadSuggestions();
-        
-        // Also render explore posts
-        this.renderExplorePosts();
     }
 
-    // Render explore posts (all posts)
     renderExplorePosts() {
         const explorePostsFeed = document.getElementById('explorePostsFeed');
         if (!explorePostsFeed) return;
