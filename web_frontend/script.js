@@ -738,15 +738,27 @@ class PictoGramApp {
             
             const postsData = postsSnapshot.docs.map(doc => {
                 const postData = doc.data();
+                console.log('DEBUG: Processing post:', doc.id, postData);
+                
+                // Try multiple field names for username
+                const username = postData.username || 
+                                postData.displayName || 
+                                postData.author || 
+                                postData.userDisplayName ||
+                                postData.createdBy ||
+                                'unknown_user';
+                
+                console.log('DEBUG: Username resolved to:', username, 'for post:', doc.id);
+                
                 return {
                     id: doc.id,
-                    userId: postData.userId,
-                    username: postData.username || postData.displayName || 'unknown_user',
-                    avatar: postData.avatar || postData.userAvatar || `https://picsum.photos/seed/${postData.userId || doc.id}/40/40`,
-                    image: postData.image || postData.imageUrl || `https://picsum.photos/seed/${doc.id}/400/400`,
-                    caption: postData.caption || postData.description || '',
-                    likes: postData.likes || 0,
-                    comments: postData.comments || 0,
+                    userId: postData.userId || postData.uid || postData.authorId,
+                    username: username,
+                    avatar: postData.avatar || postData.userAvatar || postData.userPhoto || `https://picsum.photos/seed/${postData.userId || doc.id}/40/40`,
+                    image: postData.image || postData.imageUrl || postData.photo || `https://picsum.photos/seed/${doc.id}/400/400`,
+                    caption: postData.caption || postData.description || postData.text || '',
+                    likes: postData.likes || postData.likeCount || 0,
+                    comments: postData.comments || postData.commentCount || 0,
                     time: this.formatTime(postData.createdAt),
                     liked: postData.liked || false,
                     createdAt: postData.createdAt
@@ -775,18 +787,48 @@ class PictoGramApp {
         const postsWithUserInfo = await Promise.all(posts.map(async (post) => {
             if (post.username === 'unknown_user' && post.userId) {
                 try {
+                    console.log('DEBUG: Loading user info for post:', post.id, 'userId:', post.userId);
+                    
                     // Try to get user info from users collection
                     const userDoc = await this.firestore.collection('users').doc(post.userId).get();
+                    
                     if (userDoc.exists) {
                         const userData = userDoc.data();
-                        post.username = userData.displayName || userData.username || 'User';
-                        post.avatar = userData.avatar || post.avatar;
+                        console.log('DEBUG: Found user data:', userData);
+                        
+                        // Try multiple field names for user info
+                        post.username = userData.displayName || 
+                                       userData.username || 
+                                       userData.name ||
+                                       userData.email?.split('@')[0] ||
+                                       'User_' + post.userId.substring(0, 6);
+                        
+                        post.avatar = userData.avatar || 
+                                     userData.photoURL || 
+                                     userData.profileImage ||
+                                     userData.image ||
+                                     post.avatar;
+                        
+                        console.log('DEBUG: Updated post username to:', post.username);
                     } else {
-                        // Fallback: create username from email or UID
-                        post.username = 'User_' + post.userId.substring(0, 6);
+                        console.log('DEBUG: No user document found for userId:', post.userId);
+                        // Try to get from Firebase Auth
+                        try {
+                            const userRecord = await this.auth.getUser(post.userId);
+                            if (userRecord) {
+                                post.username = userRecord.displayName || 
+                                               userRecord.email?.split('@')[0] || 
+                                               'User_' + post.userId.substring(0, 6);
+                                post.avatar = userRecord.photoURL || post.avatar;
+                                console.log('DEBUG: Got user from Auth:', post.username);
+                            }
+                        } catch (authError) {
+                            console.log('DEBUG: Could not get user from Auth:', authError);
+                            post.username = 'User_' + post.userId.substring(0, 6);
+                        }
                     }
                 } catch (error) {
-                    console.log('Could not load user info for post:', post.id);
+                    console.error('Could not load user info for post:', post.id, error);
                     post.username = 'User_' + post.userId.substring(0, 6);
                 }
             }
@@ -1027,23 +1069,26 @@ class PictoGramApp {
             
             this.userPosts = postsSnapshot.docs.map(doc => {
                 const postData = doc.data();
-                console.log('DEBUG: Post data:', postData);
+                console.log('DEBUG: User post data:', postData);
                 
                 // Use current user's info for their posts
                 const username = this.currentUser.displayName || 
                                postData.username || 
-                               postData.displayName || 
+                               postData.displayName ||
+                               postData.author ||
                                'User';
+                
+                console.log('DEBUG: User post username resolved to:', username);
                 
                 return {
                     id: doc.id,
                     userId: postData.userId || this.currentUser.uid,
                     username: username,
                     avatar: postData.avatar || this.currentUser.avatar,
-                    image: postData.image || postData.imageUrl || `https://picsum.photos/seed/${doc.id}/400/400`,
-                    caption: postData.caption || postData.description || '',
-                    likes: postData.likes || 0,
-                    comments: postData.comments || 0,
+                    image: postData.image || postData.imageUrl || postData.photo || `https://picsum.photos/seed/${doc.id}/400/400`,
+                    caption: postData.caption || postData.description || postData.text || '',
+                    likes: postData.likes || postData.likeCount || 0,
+                    comments: postData.comments || postData.commentCount || 0,
                     time: this.formatTime(postData.createdAt),
                     liked: postData.liked || false,
                     createdAt: postData.createdAt
