@@ -74,6 +74,8 @@ class PictoGramApp {
             console.log('To use real Firebase, update the firebaseConfig in script.js with your actual credentials');
             this.auth = null;
             this.firestore = null;
+            // Show logged out UI with auth buttons
+            this.updateUIForLoggedOutUser();
             return;
         }
 
@@ -84,10 +86,17 @@ class PictoGramApp {
             console.log('Firebase initialized successfully');
         } catch (error) {
             console.error('Firebase initialization error:', error);
-            // Fall back to demo mode
             this.auth = null;
             this.firestore = null;
+            // Show logged out UI with auth buttons even if Firebase fails
+            this.updateUIForLoggedOutUser();
         }
+    }
+
+    // Show auth buttons (fallback if Firebase fails)
+    showAuthButtons() {
+        console.log('Showing auth buttons - Firebase may not be available');
+        // Auth buttons are already in HTML, this is just for debugging
     }
 
     async waitForFirebase() {
@@ -687,11 +696,6 @@ class PictoGramApp {
             authButtons.innerHTML = `
                 <button onclick="showLoginModal()" class="btn-secondary">Login</button>
                 <button onclick="showSignupModal()" class="btn-primary">Sign Up</button>
-                    Login
-                </button>
-                <button onclick="showSignupModal()" class="btn-primary">
-                    Sign Up
-                </button>
             `;
         }
 
