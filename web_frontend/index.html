@@ -217,16 +217,53 @@
     </section>
 
     <!-- Messages Section -->
-    <section id="messages" style="padding: 80px 20px; background: rgba(17, 0, 24, 0.5);">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            <div style="text-align: center; margin-bottom: 64px;">
-                <h2 style="font-size: 36px; font-weight: 700; margin-bottom: 16px;">Stay Connected</h2>
-                <p style="font-size: 20px; color: rgba(255,255,255,0.7);">Message your friends and followers</p>
-            </div>
-            
-            <!-- Messages List -->
-            <div id="messagesList" style="max-width: 800px; margin: 0 auto;">
-                <!-- Messages will be loaded here -->
+    <section id="messages" style="padding: 20px; background: #000; min-height: 100vh;">
+        <div style="max-width: 935px; margin: 0 auto;">
+            <div style="display: flex; height: calc(100vh - 40px); background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; overflow: hidden;">
+                
+                <!-- Conversations List -->
+                <div style="width: 350px; border-right: 1px solid #2c2c2c; background: #262626;">
+                    <div style="padding: 16px; border-bottom: 1px solid #2c2c2c;">
+                        <h3 style="color: white; font-size: 16px; font-weight: 600; margin: 0;">Messages</h3>
+                    </div>
+                    
+                    <div id="conversationsList" style="height: calc(100% - 60px); overflow-y: auto;">
+                        <!-- Conversations will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Chat Area -->
+                <div style="flex: 1; display: flex; flex-direction: column; background: #000;">
+                    <div id="chatHeader" style="padding: 16px; border-bottom: 1px solid #2c2c2c; display: none;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img id="chatAvatar" src="" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                            <div>
+                                <h4 id="chatUsername" style="color: white; font-size: 14px; font-weight: 600; margin: 0;"></h4>
+                                <p id="chatStatus" style="color: #8e8e8e; font-size: 12px; margin: 0;">Active now</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="chatMessages" style="flex: 1; padding: 16px; overflow-y: auto;">
+                        <!-- Messages will be loaded here -->
+                    </div>
+                    
+                    <div id="chatInput" style="padding: 16px; border-top: 1px solid #2c2c2c; display: none;">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <input type="text" id="messageInput" placeholder="Type a message..." style="flex: 1; background: #262626; border: 1px solid #2c2c2c; border-radius: 8px; padding: 12px; color: white; outline: none;">
+                            <button onclick="sendMessage()" style="background: #0095f6; color: white; border: none; padding: 12px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;">Send</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div id="emptyChatState" style="flex: 1; display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center;">
+                            <i class="fas fa-paper-plane" style="font-size: 48px; color: #8e8e8e; margin-bottom: 16px; display: block;"></i>
+                            <h3 style="color: white; margin-bottom: 8px;">Your Messages</h3>
+                            <p style="color: #8e8e8e; margin-bottom: 20px;">Send private messages to your friends</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>

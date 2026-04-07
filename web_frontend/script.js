@@ -1003,6 +1003,19 @@ class PictoGramApp {
         window.viewStory = (storyId) => {
             app.viewStory(storyId);
         };
+
+        // Messaging functions
+        window.openChat = (conversationId, otherUserId, otherUsername, otherAvatar) => {
+            app.openChat(conversationId, otherUserId, otherUsername, otherAvatar);
+        };
+
+        window.sendMessage = () => {
+            app.sendMessage();
+        };
+
+        window.createDemoChat = (userId, username, avatar) => {
+            app.createDemoChat(userId, username, avatar);
+        };
     }
 
     // Load user data from Firebase
@@ -1538,31 +1551,265 @@ class PictoGramApp {
 
     // Render messages
     renderMessages() {
-        const messagesList = document.getElementById('messagesList');
-        if (!messagesList) return;
+        const conversationsList = document.getElementById('conversationsList');
+        if (!conversationsList) return;
 
-        messagesList.innerHTML = `
-            <div class="bg-gray-800 rounded-xl p-6 border border-purple-500/20">
-                <h3 class="text-xl font-semibold mb-4">Recent Messages</h3>
-                <div class="space-y-2">
-                    ${this.messages.map(message => `
-                        <div class="message-item" onclick="openChat(${message.id})">
-                            <div class="flex items-center">
-                                <img src="${message.avatar}" alt="${message.username}" class="message-avatar">
-                                <div class="message-content">
-                                    <div class="message-username">${message.username}</div>
-                                    <div class="message-preview">${message.lastMessage}</div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="message-time">${message.time}</div>
-                                    ${message.unread > 0 ? `<div class="unread-badge ml-auto">${message.unread}</div>` : ''}
-                                </div>
+        // Load conversations from Firebase
+        this.loadConversations();
+    }
+
+    // Load conversations from Firebase
+    async loadConversations() {
+        if (!this.firestore || !this.currentUser) return;
+        
+        try {
+            console.log('DEBUG: Loading conversations for user:', this.currentUser.uid);
+            
+            const conversationsList = document.getElementById('conversationsList');
+            
+            // Get conversations where user is participant
+            const conversationsSnapshot = await this.firestore
+                .collection('conversations')
+                .where('participants', 'array-contains', this.currentUser.uid)
+                .orderBy('lastMessageTime', 'desc')
+                .get();
+            
+            console.log('DEBUG: Found conversations:', conversationsSnapshot.size);
+            
+            if (conversationsSnapshot.size === 0) {
+                // Show demo conversations for testing
+                this.addDemoConversations();
+                return;
+            }
+            
+            const conversationsHTML = await Promise.all(conversationsSnapshot.docs.map(async (doc) => {
+                const conversationData = doc.data();
+                const otherUserId = conversationData.participants.find(id => id !== this.currentUser.uid);
+                
+                // Get other user's info
+                let otherUser = { displayName: 'Unknown User', avatar: `https://picsum.photos/seed/${otherUserId}/40/40` };
+                try {
+                    const userDoc = await this.firestore.collection('users').doc(otherUserId).get();
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        otherUser = {
+                            displayName: userData.displayName || userData.username || 'User',
+                            avatar: userData.avatar || userData.photoURL || otherUser.avatar
+                        };
+                    }
+                } catch (error) {
+                    console.log('Could not load user info for conversation:', error);
+                }
+                
+                return `
+                    <div style="padding: 12px 16px; border-bottom: 1px solid #2c2c2c; cursor: pointer; hover:background:#333;" onclick="openChat('${doc.id}', '${otherUserId}', '${otherUser.displayName}', '${otherUser.avatar}')">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <img src="${otherUser.avatar}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                            <div style="flex: 1;">
+                                <h4 style="color: white; font-size: 14px; font-weight: 600; margin: 0;">${otherUser.displayName}</h4>
+                                <p style="color: #8e8e8e; font-size: 12px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${conversationData.lastMessage || 'Start a conversation'}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <p style="color: #8e8e8e; font-size: 11px; margin: 0;">${this.formatTime(conversationData.lastMessageTime)}</p>
+                                ${conversationData.unreadCount && conversationData.unreadCount[this.currentUser.uid] > 0 ? 
+                                    `<div style="background: #0095f6; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; margin-left: auto;">${conversationData.unreadCount[this.currentUser.uid]}</div>` : ''}
                             </div>
                         </div>
-                    `).join('')}
+                    </div>
+                `;
+            }));
+            
+            conversationsList.innerHTML = conversationsHTML.join('');
+            
+        } catch (error) {
+            console.error('Error loading conversations:', error);
+            const conversationsList = document.getElementById('conversationsList');
+            if (conversationsList) {
+                conversationsList.innerHTML = `
+                    <div style="padding: 20px; text-align: center;">
+                        <p style="color: #8e8e8e; font-size: 14px;">Unable to load conversations</p>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    // Open chat with user
+    async openChat(conversationId, otherUserId, otherUsername, otherAvatar) {
+        console.log('DEBUG: Opening chat:', conversationId, otherUserId);
+        
+        // Show chat interface
+        document.getElementById('emptyChatState').style.display = 'none';
+        document.getElementById('chatHeader').style.display = 'block';
+        document.getElementById('chatMessages').style.display = 'block';
+        document.getElementById('chatInput').style.display = 'block';
+        
+        // Update chat header
+        document.getElementById('chatUsername').textContent = otherUsername;
+        document.getElementById('chatAvatar').src = otherAvatar;
+        
+        // Store current chat info
+        this.currentChat = {
+            conversationId: conversationId,
+            otherUserId: otherUserId,
+            otherUsername: otherUsername
+        };
+        
+        // Load messages
+        await this.loadChatMessages(conversationId);
+    }
+
+    // Load chat messages
+    async loadChatMessages(conversationId) {
+        if (!this.firestore) return;
+        
+        try {
+            const messagesSnapshot = await this.firestore
+                .collection('conversations')
+                .doc(conversationId)
+                .collection('messages')
+                .orderBy('timestamp', 'asc')
+                .get();
+            
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '';
+            
+            messagesSnapshot.forEach(doc => {
+                const messageData = doc.data();
+                const isOwnMessage = messageData.senderId === this.currentUser.uid;
+                
+                const messageHTML = `
+                    <div style="display: flex; justify-content: ${isOwnMessage ? 'flex-end' : 'flex-start'}; margin-bottom: 12px;">
+                        <div style="max-width: 70%; background: ${isOwnMessage ? '#0095f6' : '#262626'}; color: white; padding: 8px 12px; border-radius: 18px; font-size: 14px;">
+                            ${messageData.text}
+                        </div>
+                    </div>
+                `;
+                
+                chatMessages.innerHTML += messageHTML;
+            });
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+        } catch (error) {
+            console.error('Error loading messages:', error);
+        }
+    }
+
+    // Send message
+    async sendMessage() {
+        const messageInput = document.getElementById('messageInput');
+        const text = messageInput.value.trim();
+        
+        if (!text || !this.currentChat) return;
+        
+        try {
+            const messageData = {
+                text: text,
+                senderId: this.currentUser.uid,
+                timestamp: new Date()
+            };
+            
+            // Add message to conversation
+            await this.firestore
+                .collection('conversations')
+                .doc(this.currentChat.conversationId)
+                .collection('messages')
+                .add(messageData);
+            
+            // Update conversation with last message
+            await this.firestore
+                .collection('conversations')
+                .doc(this.currentChat.conversationId)
+                .update({
+                    lastMessage: text,
+                    lastMessageTime: new Date(),
+                    lastMessageSender: this.currentUser.uid
+                });
+            
+            // Clear input and reload messages
+            messageInput.value = '';
+            await this.loadChatMessages(this.currentChat.conversationId);
+            
+            // Reload conversations to update list
+            this.loadConversations();
+            
+        } catch (error) {
+            console.error('Error sending message:', error);
+            this.showNotification('Failed to send message', 'error');
+        }
+    }
+
+    // Create new conversation
+    async createConversation(otherUserId, otherUsername, otherAvatar) {
+        if (!this.firestore || !this.currentUser) return;
+        
+        try {
+            const conversationData = {
+                participants: [this.currentUser.uid, otherUserId],
+                createdAt: new Date(),
+                lastMessage: '',
+                lastMessageTime: new Date(),
+                lastMessageSender: this.currentUser.uid,
+                unreadCount: {
+                    [this.currentUser.uid]: 0,
+                    [otherUserId]: 0
+                }
+            };
+            
+            const conversationRef = await this.firestore.collection('conversations').add(conversationData);
+            
+            // Open the new conversation
+            await this.openChat(conversationRef.id, otherUserId, otherUsername, otherAvatar);
+            
+            // Reload conversations list
+            this.loadConversations();
+            
+        } catch (error) {
+            console.error('Error creating conversation:', error);
+            this.showNotification('Failed to start conversation', 'error');
+        }
+    }
+
+    // Add demo conversations for testing
+    addDemoConversations() {
+        // This will be called if no real conversations exist
+        const conversationsList = document.getElementById('conversationsList');
+        if (!conversationsList) return;
+        
+        const demoUsers = [
+            { id: 'demo1', name: 'Alex Johnson', avatar: 'https://picsum.photos/seed/alex/40/40' },
+            { id: 'demo2', name: 'Sarah Williams', avatar: 'https://picsum.photos/seed/sarah/40/40' },
+            { id: 'demo3', name: 'Mike Chen', avatar: 'https://picsum.photos/seed/mike/40/40' }
+        ];
+        
+        const conversationsHTML = demoUsers.map(user => `
+            <div style="padding: 12px 16px; border-bottom: 1px solid #2c2c2c; cursor: pointer;" onclick="createDemoChat('${user.id}', '${user.name}', '${user.avatar}')">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <img src="${user.avatar}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                    <div style="flex: 1;">
+                        <h4 style="color: white; font-size: 14px; font-weight: 600; margin: 0;">${user.name}</h4>
+                        <p style="color: #8e8e8e; font-size: 12px; margin: 0;">Start a conversation</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="color: #8e8e8e; font-size: 11px; margin: 0;">Now</p>
+                    </div>
                 </div>
             </div>
+        `).join('');
+        
+        conversationsList.innerHTML = `
+            <div style="padding: 12px 16px; background: #333; color: #8e8e8e; font-size: 12px; text-align: center;">
+                Demo Users - Click to start chatting
+            </div>
+            ${conversationsHTML}
         `;
+    }
+
+    // Create demo chat
+    async createDemoChat(userId, username, avatar) {
+        await this.createConversation(userId, username, avatar);
     }
 
     // Render profile
