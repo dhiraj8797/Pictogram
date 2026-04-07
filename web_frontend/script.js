@@ -780,11 +780,6 @@ class PictoGramApp {
             this.posts = postsWithUserInfo;
             console.log('DEBUG: Processed all posts:', this.posts.length);
             
-            // Also render explore section if user is logged in
-            if (this.currentUser) {
-                this.renderExplorePosts();
-            }
-            
         } catch (error) {
             console.error('Error loading all posts:', error);
             this.posts = [];
@@ -972,6 +967,10 @@ class PictoGramApp {
             if (menu) {
                 menu.classList.toggle('hidden');
             }
+        };
+
+        window.navigateToExplore = () => {
+            app.navigateToExplore();
         };
 
         // Post interaction functions
@@ -1562,9 +1561,10 @@ class PictoGramApp {
     // Render posts
     renderPosts() {
         // This function is called during initialization
-        // We'll use renderExplorePosts for the main posts display
+        // We'll render the home feed, not the explore section
         if (this.currentUser) {
-            this.renderExplorePosts();
+            // The home feed will be rendered by renderHomePage()
+            // This prevents duplication with the explore section
         }
     }
 
@@ -1829,6 +1829,12 @@ class PictoGramApp {
     // Create demo chat
     async createDemoChat(userId, username, avatar) {
         await this.createConversation(userId, username, avatar);
+    }
+
+    // Navigate to Explore section
+    navigateToExplore() {
+        // Render the explore section when user navigates to it
+        this.renderExplorePosts();
     }
 
     // Render profile
